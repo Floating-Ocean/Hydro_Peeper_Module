@@ -1,5 +1,7 @@
 package flocean.module.peeper.fjnuoj;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONWriter;
 import flocean.module.peeper.fjnuoj.data.*;
 import flocean.module.peeper.fjnuoj.data.RankableRecord;
 import flocean.module.peeper.fjnuoj.data.rank.SimpleRankItem;
@@ -10,8 +12,10 @@ import flocean.module.peeper.fjnuoj.utils.CrashHandler;
 import flocean.module.peeper.fjnuoj.utils.Pair;
 import flocean.module.peeper.fjnuoj.utils.ModuleFile;
 import flocean.module.peeper.fjnuoj.enums.VerdictType;
+import org.apache.commons.text.similarity.FuzzyScore;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -42,15 +46,16 @@ public class Main {
                     if (args.length == 3 && args[0].equals("/full")) generateCompletely(args[1], args[2]);
                     else if (args.length == 3 && args[0].equals("/now")) generateTemporarily(args[1], args[2]);
                     else if (args.length == 4 && args[0].equals("/verdict")) generateVerdict(args[1], args[2], args[3]);
-                    else if (args.length == 5 && args[0].equals("/user")){
+                    else if (args.length == 4 && args[0].equals("/user")){
+                        if(args[1].equals("name")) fuzzyMatchUser(args[2], args[3]);
+                        else throw new RunModuleException("Operation Not Supported.");
+                    }else if (args.length == 5 && args[0].equals("/user")){
                         if(args[1].equals("id")) generateUserInfo(Integer.parseInt(args[2]), args[3], args[4]);
                         else throw new RunModuleException("Operation Not Supported.");
-                        // TODO: 2023/11/1 找个时间写一下读入用户名，然后模糊匹配
                     }
                     else printErrorParameter();
                 }
             } else printErrorParameter();
-            throw new RunModuleException("");
         } catch (Throwable e) {
             Logger.getGlobal().log(Level.SEVERE, e.getMessage(), e);
             try {
@@ -82,6 +87,32 @@ public class Main {
     private static boolean checkNecessity() {
         return !new File(ModuleFile.path + "/data/" + RankTool.generateFileName(new Date(System.currentTimeMillis()), "json")).exists();
     }
+
+
+    private static void fuzzyMatchUser(String userName, String plainPath) throws Throwable {
+
+        System.out.println("\n正在爬取排行榜数据");
+        List<RankingData> rankingDataList = RankTool.fetchData();
+
+        System.out.print("\n处理数据");
+        FuzzyScore fuzzyScore = new FuzzyScore(Locale.getDefault());
+        List<Pair<UserData, Double>> matches = new ArrayList<>();
+        for (var each : rankingDataList) {
+            double currentScore = fuzzyScore.fuzzyScore(userName, each.user());
+            if (currentScore >= 0.6) {
+                matches.add(Pair.of(new UserData(each.user(), each.id()), currentScore));
+            }
+        }
+        matches.sort(Comparator.comparingDouble(o -> -o.B));
+        System.out.println("， 完成");
+
+        if(matches.isEmpty()){
+            saveInformationLocally("mismatch", plainPath);
+        }else {
+            JSON.writeTo(new FileOutputStream(plainPath), matches.get(0).A, JSONWriter.Feature.PrettyFormat);
+        }
+    }
+
 
     private static void generateUserInfo(int uid, String imgPath, String plainPath) throws Throwable {
 
@@ -399,7 +430,7 @@ public class Main {
 
         plainResult.append("\n\n社交信息：")
                 .append("\nQQ: ").append(userInfoData.qq());
-        if(!userInfoData.qq().equals("unknown")) plainResult.append(" ").append(userInfoData.qqName());
+        if(!userInfoData.qq().equals("unknown")) plainResult.append("  ").append(userInfoData.qqName());
         plainResult.append("\n邮箱: ").append(userInfoData.mail().replace(".", " ."));
 
         int submitCount = currentSubmissionData.size();
@@ -414,7 +445,7 @@ public class Main {
             plainResult.append("\n\n最后一次提交：")
                     .append("\n").append(lastSubmit.problemName())
                     .append("\n于 ")
-                    .append(new SimpleDateFormat("HH:mm:ss").format(new Date(lastSubmit.at())))
+                    .append(new SimpleDateFormat("HH:mm:ss").format(new Date(lastSubmit.at() * 1000)))
                     .append(" 得到了 ")
                     .append(lastSubmit.verdictType().getName())
                     .append(" 判定");

@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "flocean.module.peeper.fjnuoj"
-version = "3.3.0_b3"
+version = "3.3.0_b4"
 
 repositories {
     mavenCentral()
@@ -15,10 +15,12 @@ repositories {
 dependencies {
     implementation("org.jsoup:jsoup:1.16.1")
     implementation("com.alibaba.fastjson2:fastjson2:2.0.40")
+    implementation("org.apache.commons:commons-text:1.10.0")
 }
 
 tasks.jar {
     archiveFileName.set("module_peeper_fjnuoj.jar")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
         attributes["Main-Class"] = project.group.toString() + ".Main"
     }

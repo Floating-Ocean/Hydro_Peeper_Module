@@ -3,8 +3,8 @@ package flocean.module.peeper.fjnuoj.utils;
 import java.io.File;
 
 public class ModuleFile {
-//    public static final String path = "/home/floatingcean/fjnuacm_rank/lib";
-    public static final String path = "D:\\root\\storage\\emulated\\999\\FJNU_ACM rank";
+    public static final String path = "/home/floatingcean/fjnuacm_rank/lib";
+//    public static final String path = "D:\\root\\storage\\emulated\\999\\FJNU_ACM rank";
 
 
     /**
