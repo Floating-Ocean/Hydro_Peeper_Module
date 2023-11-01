@@ -30,7 +30,7 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            saveInformationLocally("ok", ModuleFile.path + "/bug/out.txt");
+            saveTextLocally("ok", ModuleFile.path + "/bug/out.txt");
         } catch (Throwable e) {
             Logger.getGlobal().log(Level.SEVERE, e.getMessage(), e);
         }
@@ -41,25 +41,22 @@ public class Main {
                 } else if (args.length == 2 && args[0].equals("/version")) {
                     String version = VersionControl.fetchVersionInfo(Main.class);
                     System.out.println(version);
-                    saveInformationLocally(version, args[1]);
+                    saveTextLocally(version, args[1]);
                 } else {
                     if (args.length == 3 && args[0].equals("/full")) generateCompletely(args[1], args[2]);
                     else if (args.length == 3 && args[0].equals("/now")) generateTemporarily(args[1], args[2]);
                     else if (args.length == 4 && args[0].equals("/verdict")) generateVerdict(args[1], args[2], args[3]);
                     else if (args.length == 4 && args[0].equals("/user")){
+                        if(args[1].equals("id")) generateUserInfo(Integer.parseInt(args[2]), args[3]);
                         if(args[1].equals("name")) fuzzyMatchUser(args[2], args[3]);
                         else throw new RunModuleException("Operation Not Supported.");
-                    }else if (args.length == 5 && args[0].equals("/user")){
-                        if(args[1].equals("id")) generateUserInfo(Integer.parseInt(args[2]), args[3], args[4]);
-                        else throw new RunModuleException("Operation Not Supported.");
-                    }
-                    else printErrorParameter();
+                    } else printErrorParameter();
                 }
             } else printErrorParameter();
         } catch (Throwable e) {
             Logger.getGlobal().log(Level.SEVERE, e.getMessage(), e);
             try {
-                saveInformationLocally(CrashHandler.handleError(e), ModuleFile.path + "/bug/out.txt");
+                saveTextLocally(CrashHandler.handleError(e), ModuleFile.path + "/bug/out.txt");
             } catch (Throwable ee) {
                 Logger.getGlobal().log(Level.SEVERE, e.getMessage(), e);
             }
@@ -76,6 +73,7 @@ public class Main {
                 If you want to get a plain text, put /plain at the beginning.
                 For debug, input /version to get version info, input /necessity to check if we need to regenerate daily rank list.
                 """);
+        throw new RunModuleException("input parameter invalid.");
     }
 
 
@@ -89,8 +87,15 @@ public class Main {
     }
 
 
+    /**
+     * 对用户名进行模糊匹配
+     * @param userName 目标用户名
+     * @param plainPath 输出路径
+     * @throws Throwable 异常信息
+     */
     private static void fuzzyMatchUser(String userName, String plainPath) throws Throwable {
 
+        //Step1. 爬取用户列表
         System.out.println("\n正在爬取排行榜数据");
         List<RankingData> rankingDataList = RankTool.fetchData();
 
@@ -99,7 +104,7 @@ public class Main {
         List<Pair<UserData, Double>> matches = new ArrayList<>();
         for (var each : rankingDataList) {
             double currentScore = fuzzyScore.fuzzyScore(userName, each.user());
-            if (currentScore >= 0.6) {
+            if (currentScore >= 0.6) { //0.6的阈值
                 matches.add(Pair.of(new UserData(each.user(), each.id()), currentScore));
             }
         }
@@ -107,15 +112,22 @@ public class Main {
         System.out.println("， 完成");
 
         if(matches.isEmpty()){
-            saveInformationLocally("mismatch", plainPath);
+            saveTextLocally("mismatch", plainPath);
         }else {
             JSON.writeTo(new FileOutputStream(plainPath), matches.get(0).A, JSONWriter.Feature.PrettyFormat);
         }
     }
 
 
-    private static void generateUserInfo(int uid, String imgPath, String plainPath) throws Throwable {
+    /**
+     * 生成用户信息
+     * @param uid 用户 uid
+     * @param plainPath 输出路径
+     * @throws Throwable 异常信息
+     */
+    private static void generateUserInfo(int uid, String plainPath) throws Throwable {
 
+        //Step1. 爬取用户信息
         System.out.println("\n正在爬取用户信息");
         UserInfoData userInfoHolder = UserInfoTool.fetchData(uid);
 
@@ -141,8 +153,7 @@ public class Main {
         //Step4. 生成结果
         System.out.println("\n正在生成结果\n\n");
         Pair<UserInfoHolder, String> result = packUserInfo(userInfoHolder, currentSubmissionData, verdictData, trainingProgress);
-//        ImgGenerator.generateNowRankImg(result.A, imgPath);
-        saveInformationLocally(result.B, plainPath);
+        saveTextLocally(result.B, plainPath);
 
         System.out.println(result.B);
     }
@@ -160,7 +171,7 @@ public class Main {
         VerdictType verdictType = VerdictType.searchVerdict(type);
         if (verdictType == null) {
             System.out.println("input a valid verdictType, such as: ac, wa, ce, tle, mle, re.");
-            return;
+            throw new RunModuleException("verdict type invalid.");
         }
 
         //Step1. 刷新RP
@@ -180,7 +191,7 @@ public class Main {
         Pair<VerdictRankHolder, String> result = generateVerdictResult(verdictType, verdictRank);
 
         ImgGenerator.generateVerdictRankImg(result.A, imgPath);
-        saveInformationLocally(result.B, plainPath);
+        saveTextLocally(result.B, plainPath);
 
         System.out.println(result.B);
     }
@@ -232,7 +243,7 @@ public class Main {
         System.out.println("\n正在生成结果\n\n");
         Pair<NowRankHolder, String> result = packNowResult(deltaRankingData, submissionData, verdictData, firstACData, newbieTrainingData);
         ImgGenerator.generateNowRankImg(result.A, imgPath);
-        saveInformationLocally(result.B, plainPath);
+        saveTextLocally(result.B, plainPath);
 
         System.out.println(result.B);
     }
@@ -296,7 +307,7 @@ public class Main {
         System.out.println("\n正在生成结果\n\n");
         Pair<FullRankHolder, String> result = packFullResult(deltaRankingData, submissionData, verdictData, firstACData, mostPopularProblem, newbieTrainingData);
         ImgGenerator.generateFullRankImg(result.A, imgPath);
-        saveInformationLocally(result.B, plainPath);
+        saveTextLocally(result.B, plainPath);
 
         System.out.println(result.B);
     }
@@ -320,7 +331,7 @@ public class Main {
      * @param path 输出路径
      * @throws Throwable 异常信息
      */
-    private static void saveInformationLocally(String info, String path) throws Throwable {
+    private static void saveTextLocally(String info, String path) throws Throwable {
         File file = ModuleFile.fetchFile(path);
         if (file == null || !file.delete() || !file.createNewFile()) {
             throw new RunModuleException("File saved unsuccessfully.");
@@ -481,7 +492,14 @@ public class Main {
      * @param newbieTrainingData 新生训练数据
      * @return 处理完成后的今日当前题数数据 <包装数据，文本结果>
      */
-    private static Pair<NowRankHolder, String> packNowResult(List<RankingData> deltaRankingData, List<SubmissionData> submissionData, Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData, Pair<Long, Pair<String, String>> firstACdata, List<TrainingData> newbieTrainingData) throws Throwable {
+    private static Pair<NowRankHolder, String> packNowResult(
+            List<RankingData> deltaRankingData,
+            List<SubmissionData> submissionData,
+            Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData,
+            Pair<Long, Pair<String, String>> firstACdata,
+            List<TrainingData> newbieTrainingData
+    ) throws Throwable {
+
         StringBuilder plainResult = new StringBuilder();
         plainResult.append("今日当前题数榜单：\n\n");
 
@@ -582,13 +600,16 @@ public class Main {
         Pair<StringBuilder, List<SimpleRankItem>> top5 = generateRank(deltaNewbie, 5, null, "");
         plainResult.append(top5.A).append("\n");
 
+        long submitUserAmount = submissionData.stream().map(SubmissionData::id).distinct().count();
         int submitCount = submissionData.size();
         double submitAve = verdictData.A.A, acProportion = verdictData.A.B;
+
         String firstACWho = firstACdata == null ? "无人过题" : firstACdata.B.A;
         StringBuilder firstACInfo = new StringBuilder();
         if (firstACdata == null) firstACInfo.append("虽然但是，就是没有人过题啊！");
         else firstACInfo.append("在 ").append(new SimpleDateFormat("HH:mm:ss").format(new Date(firstACdata.A * 1000)))
                 .append(" 提交了 ").append(firstACdata.B.B).append(" 并通过");
+
         plainResult.append("提交总数：\n").append(submitCount)
                 .append("\n提交平均分：\n").append(String.format(Locale.ROOT, "%.2f", submitAve))
                 .append("\n提交通过率：\n").append(String.format(Locale.ROOT, "%.2f", acProportion))
@@ -596,8 +617,9 @@ public class Main {
                 .append("\n").append(firstACInfo).append("\n");
 
         StringBuilder submitDetail = generateSubmitDetail(verdictData);
-        plainResult.append("其中，共有 ").append(submitDetail).append("\n");
-        return new SubmissionPackHolder(top5.B, submitCount, submitAve, acProportion, submitDetail.toString(), firstACWho, firstACInfo.toString());
+        plainResult.append("共收到 ").append(submitUserAmount).append(" 个人的提交，其中包含 ")
+                .append(submitDetail).append("\n");
+        return new SubmissionPackHolder(top5.B, submitUserAmount, submitCount, submitAve, acProportion, submitDetail.toString(), firstACWho, firstACInfo.toString());
     }
 
 
@@ -643,6 +665,7 @@ public class Main {
     private static StringBuilder generateSubmitDetail(
             Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData
     ) {
+
         StringBuilder submitDetail = new StringBuilder();
         for (VerdictType type : VerdictType.values()) {
             if (verdictData.B.getOrDefault(type, 0) > 0) {

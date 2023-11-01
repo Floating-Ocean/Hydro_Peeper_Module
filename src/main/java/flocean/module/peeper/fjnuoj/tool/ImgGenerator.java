@@ -40,10 +40,10 @@ public class ImgGenerator {
                 + "  FJNUACM Online Judge Rank List", "H", 36);
 
         StyledString top1Title = packString("昨日卷王", "B", 36);
-        StyledString top1Who = packString(fullRankHolder.top1, "B", 72);
+        StyledString top1Who = packString(fullRankHolder.top1, "H", 72);
 
         StyledString top5Subtitle = packString("过题数榜单", "B", 36);
-        StyledString top5Title = packString("昨日过题数", "B", 72);
+        StyledString top5Title = packString("昨日过题数", "H", 72);
         StyledString top5Mark = packString("Top 5th", "H", 48);
         List<Pair<Double, StyledString[]>> top5Who = new ArrayList<>();
         for(var each : fullRankHolder.top5()){
@@ -57,25 +57,32 @@ public class ImgGenerator {
         }
 
         StyledString submitCountTitle = packString("提交总数", "B", 36);
-        StyledString submitCountHow = packString("" + fullRankHolder.submitCount, "B", 72);
+        StyledString submitCountHow = packString("" + fullRankHolder.submitCount, "H", 72);
 
         StyledString submitAveTitle = packString("提交平均分", "B", 36);
-        StyledString submitAveHow = packString(String.format(Locale.ROOT, "%.2f", fullRankHolder.submitAve), "B", 72);
+        //将小数分成 整数部分 和 小数部分，整数部分加粗
+        String[] submitAve = String.format(Locale.ROOT, "%.2f", fullRankHolder.submitAve).split("\\.");
+        StyledString submitAveHowMain = packString(submitAve[0], "H", 72);
+        StyledString submitAveHowSub = packString("." + submitAve[1], "H", 72);
 
         StyledString submitAcTitle = packString("提交通过率", "B", 36);
-        StyledString submitAcHow = packString(String.format(Locale.ROOT, "%.2f", fullRankHolder.acProportion), "B", 72);
-        StyledString submitDetailWhat = packString("其中，共有 " + fullRankHolder.submitDetail, "M", 28);
+        String[] submitAc = String.format(Locale.ROOT, "%.2f", fullRankHolder.acProportion).split("\\.");
+        StyledString submitAcHowMain = packString(submitAc[0], "H", 72);
+        StyledString submitAcHowSub = packString("." + submitAc[1], "H", 72);
+
+        StyledString submitDetailWhat = packString("共收到 " + fullRankHolder.submitUserAmount +
+                " 个人的提交，其中包含 " + fullRankHolder.submitDetail, "M", 28);
 
         StyledString firstACTitle = packString("昨日最速通过", "B", 36);
-        StyledString firstACWho = packString(fullRankHolder.firstACName, "B", 72);
+        StyledString firstACWho = packString(fullRankHolder.firstACName, "H", 72);
         StyledString firstACWhat = packString(fullRankHolder.firstACInfo, "M", 28);
 
         StyledString mostPopularProblemTitle = packString("昨日最受欢迎的题目", "B", 36);
-        StyledString mostPopularProblemWhat = packString(fullRankHolder.mostPopularProblem, "B", 72);
+        StyledString mostPopularProblemWhat = packString(fullRankHolder.mostPopularProblem, "H", 72);
         StyledString mostPopularCountHow = packString("共有 " + fullRankHolder.mostPopularCount + " 个人提交本题", "M", 28);
 
         StyledString top10Subtitle = packString("训练榜单", "B", 36);
-        StyledString top10Title = packString("新生训练题单完成比", "B", 72);
+        StyledString top10Title = packString("新生训练题单完成比", "H", 72);
         StyledString top10Mark = packString("Top 10th", "H", 48);
         List<Pair<Double, StyledString[]>> top10Who = new ArrayList<>();
         for(var each : fullRankHolder.top10()){
@@ -89,7 +96,7 @@ public class ImgGenerator {
         }
 
         StyledString fullRankSubtitle = packString("完整榜单", "B", 36);
-        StyledString fullRankTitle = packString("昨日 OJ 总榜", "B", 72);
+        StyledString fullRankTitle = packString("昨日 OJ 总榜", "H", 72);
         List<Pair<Double, StyledString[]>> fullRankWho = new ArrayList<>();
         for(var each : fullRankHolder.fullRank()){
             SubmissionRankItem currentRankItem = new SubmissionRankItem(each, fullRankHolder.fullRank().get(0).val());
@@ -132,33 +139,11 @@ public class ImgGenerator {
         drawText(outputCanvas, top5Mark, 128 + ImgConvert.calculateStringWidth(top5Title.font, top5Title.content) + 28, 32, currentY);
         drawRankText(outputCanvas, top5Who, 108, currentY);
 
-        AtomicInteger unchangedY = new AtomicInteger(currentY.get());
-        drawText(outputCanvas, submitCountTitle, 8, currentY);
-        drawText(outputCanvas, submitCountHow, 32, currentY);
+        drawSubmitDetail(currentY, outputCanvas,
+                submitCountTitle, submitCountHow, submitAveTitle, submitAveHowMain, submitAveHowSub,
+                submitAcTitle, submitAcHowMain, submitAcHowSub, submitDetailWhat,
+                firstACTitle, firstACWho, firstACWhat);
 
-        currentY.set(unchangedY.get()); //保持同一行
-        int submitCountWidth = Math.max(
-                ImgConvert.calculateStringWidth(submitCountTitle.font, submitCountTitle.content),
-                ImgConvert.calculateStringWidth(submitCountHow.font, submitCountHow.content));
-        drawText(outputCanvas, submitAveTitle, 128 + submitCountWidth + 150, 8, currentY);
-        drawText(outputCanvas, submitAveHow, 128 + submitCountWidth + 150, 32, currentY);
-
-        currentY.set(unchangedY.get()); //保持同一行
-        submitCountWidth = submitCountWidth + Math.max(
-                ImgConvert.calculateStringWidth(submitAveTitle.font, submitAveTitle.content),
-                ImgConvert.calculateStringWidth(submitAveHow.font, submitAveHow.content));
-        drawText(outputCanvas, submitAcTitle, 128 + 128 + submitCountWidth + 150, 8, currentY);
-        drawText(outputCanvas, submitAcHow, 128 + 128 + submitCountWidth + 150, 32, currentY);
-        outputCanvas.setColor(new Color(0, 0, 0, 136));
-        drawText(outputCanvas, submitDetailWhat, 108, currentY);
-
-        outputCanvas.setColor(Color.black);
-        drawText(outputCanvas, firstACTitle, 8, currentY);
-        drawText(outputCanvas, firstACWho, 32, currentY);
-        outputCanvas.setColor(new Color(0, 0, 0, 136));
-        drawText(outputCanvas, firstACWhat, 108, currentY);
-
-        outputCanvas.setColor(Color.black);
         drawText(outputCanvas, mostPopularProblemTitle, 8, currentY);
         drawText(outputCanvas, mostPopularProblemWhat, 32, currentY);
         outputCanvas.setColor(new Color(0, 0, 0, 136));
@@ -196,7 +181,7 @@ public class ImgGenerator {
                 + "  FJNUACM Online Judge Rank List", "H", 36);
 
         StyledString top5Subtitle = packString("过题数榜单", "B", 36);
-        StyledString top5Title = packString("今日过题数", "B", 72);
+        StyledString top5Title = packString("今日过题数", "H", 72);
         StyledString top5Mark = packString("Top 5th", "H", 48);
         List<Pair<Double, StyledString[]>> top5Who = new ArrayList<>();
         for(var each : nowRankHolder.top5()){
@@ -210,21 +195,27 @@ public class ImgGenerator {
         }
 
         StyledString submitCountTitle = packString("提交总数", "B", 36);
-        StyledString submitCountHow = packString("" + nowRankHolder.submitCount, "B", 72);
+        StyledString submitCountHow = packString("" + nowRankHolder.submitCount, "H", 72);
 
         StyledString submitAveTitle = packString("提交平均分", "B", 36);
-        StyledString submitAveHow = packString(String.format(Locale.ROOT, "%.2f", nowRankHolder.submitAve), "B", 72);
+        //将小数分成 整数部分 和 小数部分，整数部分加粗
+        String[] submitAve = String.format(Locale.ROOT, "%.2f", nowRankHolder.submitAve).split("\\.");
+        StyledString submitAveHowMain = packString(submitAve[0], "H", 72);
+        StyledString submitAveHowSub = packString("." + submitAve[1], "H", 72);
 
         StyledString submitAcTitle = packString("提交通过率", "B", 36);
-        StyledString submitAcHow = packString(String.format(Locale.ROOT, "%.2f", nowRankHolder.acProportion), "B", 72);
-        StyledString submitDetailWhat = packString("其中，共有 " + nowRankHolder.submitDetail, "M", 28);
+        String[] submitAc = String.format(Locale.ROOT, "%.2f", nowRankHolder.acProportion).split("\\.");
+        StyledString submitAcHowMain = packString(submitAc[0], "H", 72);
+        StyledString submitAcHowSub = packString("." + submitAc[1], "H", 72);
+        StyledString submitDetailWhat = packString("收到 " + nowRankHolder.submitUserAmount +
+                " 个人的提交，其中包含 " + nowRankHolder.submitDetail, "M", 28);
 
         StyledString firstACTitle = packString("今日最速通过", "B", 36);
-        StyledString firstACWho = packString(nowRankHolder.firstACName, "B", 72);
+        StyledString firstACWho = packString(nowRankHolder.firstACName, "H", 72);
         StyledString firstACWhat = packString(nowRankHolder.firstACInfo, "M", 28);
 
         StyledString top52Subtitle = packString("训练榜单", "B", 36);
-        StyledString top52Title = packString("新生训练题单完成比", "B", 72);
+        StyledString top52Title = packString("新生训练题单完成比", "H", 72);
         StyledString top52Mark = packString("Top 5th", "H", 48);
         List<Pair<Double, StyledString[]>> top52Who = new ArrayList<>();
         for(var each : nowRankHolder.top52()){
@@ -261,33 +252,11 @@ public class ImgGenerator {
         drawText(outputCanvas, top5Mark, 128 + ImgConvert.calculateStringWidth(top5Title.font, top5Title.content) + 28, 32, currentY);
         drawRankText(outputCanvas, top5Who, 108, currentY);
 
-        AtomicInteger unchangedY = new AtomicInteger(currentY.get());
-        drawText(outputCanvas, submitCountTitle, 8, currentY);
-        drawText(outputCanvas, submitCountHow, 32, currentY);
+        drawSubmitDetail(currentY, outputCanvas,
+                submitCountTitle, submitCountHow, submitAveTitle, submitAveHowMain, submitAveHowSub,
+                submitAcTitle, submitAcHowMain, submitAcHowSub, submitDetailWhat,
+                firstACTitle, firstACWho, firstACWhat);
 
-        currentY.set(unchangedY.get()); //保持同一行
-        int submitCountWidth = Math.max(
-                ImgConvert.calculateStringWidth(submitCountTitle.font, submitCountTitle.content),
-                ImgConvert.calculateStringWidth(submitCountHow.font, submitCountHow.content));
-        drawText(outputCanvas, submitAveTitle, 128 + submitCountWidth + 150, 8, currentY);
-        drawText(outputCanvas, submitAveHow, 128 + submitCountWidth + 150, 32, currentY);
-
-        currentY.set(unchangedY.get()); //保持同一行
-        submitCountWidth = submitCountWidth + Math.max(
-                ImgConvert.calculateStringWidth(submitAveTitle.font, submitAveTitle.content),
-                ImgConvert.calculateStringWidth(submitAveHow.font, submitAveHow.content));
-        drawText(outputCanvas, submitAcTitle, 128 + 128 + submitCountWidth + 150, 8, currentY);
-        drawText(outputCanvas, submitAcHow, 128 + 128 + submitCountWidth + 150, 32, currentY);
-        outputCanvas.setColor(new Color(0, 0, 0, 136));
-        drawText(outputCanvas, submitDetailWhat, 108, currentY);
-
-        outputCanvas.setColor(Color.black);
-        drawText(outputCanvas, firstACTitle, 8, currentY);
-        drawText(outputCanvas, firstACWho, 32, currentY);
-        outputCanvas.setColor(new Color(0, 0, 0, 136));
-        drawText(outputCanvas, firstACWhat, 108, currentY);
-
-        outputCanvas.setColor(Color.black);
         drawText(outputCanvas, top52Subtitle, 8, currentY);
         drawText(outputCanvas, top52Title, 32, currentY);
         currentY.addAndGet(-96);
@@ -315,13 +284,13 @@ public class ImgGenerator {
                 + "  FJNUACM Online Judge Rank List", "H", 36);
 
         StyledString submitCountTitle = packString("提交总数", "B", 36);
-        StyledString submitCountHow = packString("" + verdictRankHolder.submitCount, "B", 72);
+        StyledString submitCountHow = packString("" + verdictRankHolder.submitCount, "H", 72);
 
         StyledString proportionTitle = packString(verdictRankHolder.verdict.getName() + " 占比", "B", 36);
-        StyledString proportionHow = packString(String.format(Locale.ROOT, "%.2f", verdictRankHolder.proportion), "B", 72);
+        StyledString proportionHow = packString(String.format(Locale.ROOT, "%.2f", verdictRankHolder.proportion), "H", 72);
 
         StyledString top10Subtitle = packString("分类型提交榜单", "B", 36);
-        StyledString top10Title = packString(verdictRankHolder.verdict.getName() + " 排行榜", "B", 72);
+        StyledString top10Title = packString(verdictRankHolder.verdict.getAlias() + " 排行榜", "H", 72);
         StyledString top10Mark = packString("Top 10th", "H", 48);
         List<Pair<Double, StyledString[]>> top10Who = new ArrayList<>();
         for(var each : verdictRankHolder.top10()){
@@ -401,6 +370,63 @@ public class ImgGenerator {
     }
 
 
+    /**
+     *
+     * @param currentY 开始绘制文本的高度
+     * @param outputCanvas 目标图层
+     */
+    private static void drawSubmitDetail(AtomicInteger currentY, Graphics2D outputCanvas, StyledString submitCountTitle, StyledString submitCountHow, StyledString submitAveTitle, StyledString submitAveHowMain, StyledString submitAveHowSub, StyledString submitAcTitle, StyledString submitAcHowMain, StyledString submitAcHowSub, StyledString submitDetailWhat, StyledString firstACTitle, StyledString firstACWho, StyledString firstACWhat) {
+        AtomicInteger unchangedY = new AtomicInteger(currentY.get());
+        drawText(outputCanvas, submitCountTitle, 8, currentY);
+        drawText(outputCanvas, submitCountHow, 32, currentY);
+
+        currentY.set(unchangedY.get()); //保持同一行
+        int submitCountWidth = Math.max(
+                ImgConvert.calculateStringWidth(submitCountTitle.font, submitCountTitle.content),
+                ImgConvert.calculateStringWidth(submitCountHow.font, submitCountHow.content));
+        drawText(outputCanvas, submitAveTitle, 128 + submitCountWidth + 150, 8, currentY);
+        AtomicInteger unchangedY2 = new AtomicInteger(currentY.get());
+        drawText(outputCanvas, submitAveHowMain, 128 + submitCountWidth + 150, 32, currentY);
+        currentY.set(unchangedY2.get()); //保持同一行
+        outputCanvas.setColor(new Color(0, 0, 0, 64));
+        drawText(outputCanvas, submitAveHowSub,
+                128 + submitCountWidth + 150 + ImgConvert.calculateStringWidth(submitAveHowMain.font, submitAveHowMain.content),
+                32, currentY);
+
+        currentY.set(unchangedY.get()); //保持同一行
+        outputCanvas.setColor(Color.black);
+        submitCountWidth = submitCountWidth + Math.max(
+                ImgConvert.calculateStringWidth(submitAveTitle.font, submitAveTitle.content),
+                ImgConvert.calculateStringWidth(submitAveHowMain.font, submitAveHowMain.content)
+                        + ImgConvert.calculateStringWidth(submitAveHowSub.font, submitAveHowSub.content));
+        drawText(outputCanvas, submitAcTitle, 128 + 128 + submitCountWidth + 150, 8, currentY);
+        drawText(outputCanvas, submitAcHowMain, 128 + 128 + submitCountWidth + 150, 32, currentY);
+        currentY.set(unchangedY2.get()); //保持同一行
+        outputCanvas.setColor(new Color(0, 0, 0, 64));
+        drawText(outputCanvas, submitAcHowSub,
+                128 + 128 + submitCountWidth + 150 + ImgConvert.calculateStringWidth(submitAcHowMain.font, submitAcHowMain.content),
+                32, currentY);
+
+        outputCanvas.setColor(new Color(0, 0, 0, 136));
+        drawText(outputCanvas, submitDetailWhat, 108, currentY);
+
+        outputCanvas.setColor(Color.black);
+        drawText(outputCanvas, firstACTitle, 8, currentY);
+        drawText(outputCanvas, firstACWho, 32, currentY);
+        outputCanvas.setColor(new Color(0, 0, 0, 136));
+        drawText(outputCanvas, firstACWhat, 108, currentY);
+
+        outputCanvas.setColor(Color.black);
+    }
+
+
+    /**
+     * 绘制排行榜
+     * @param outputCanvas 目标图层
+     * @param content 排行榜内容
+     * @param paddingBottom 下边距
+     * @param currentY 开始绘制文本的高度
+     */
     private static void drawRankText(Graphics2D outputCanvas, List<Pair<Double, StyledString[]>> content, int paddingBottom, AtomicInteger currentY){
         for(var each : content){
             int progressLen = (int)(360 + 440 * each.A);
@@ -545,23 +571,23 @@ public class ImgGenerator {
                                  SubmissionData lastSubmit, int trainingProgress) {
     }
 
-    public record FullRankHolder(String top1, List<SimpleRankItem> top5, int submitCount, double submitAve, double acProportion, String submitDetail,
+    public record FullRankHolder(String top1, List<SimpleRankItem> top5, long submitUserAmount, int submitCount, double submitAve, double acProportion, String submitDetail,
                                  String firstACName, String firstACInfo, String mostPopularProblem, int mostPopularCount,
                                  List<SimpleRankItem> top10, List<SimpleRankItem> fullRank) {
 
         public FullRankHolder(String top1, SubmissionPackHolder submissionData, String mostPopularProblem, int mostPopularCount, List<SimpleRankItem> top10, List<SimpleRankItem> fullRank) {
-            this(top1, submissionData.top5, submissionData.submitCount, submissionData.submitAve, submissionData.acProportion, submissionData.submitDetail, submissionData.firstACName, submissionData.firstACInfo, mostPopularProblem, mostPopularCount, top10, fullRank);
+            this(top1, submissionData.top5, submissionData.submitUserAmount, submissionData.submitCount, submissionData.submitAve, submissionData.acProportion, submissionData.submitDetail, submissionData.firstACName, submissionData.firstACInfo, mostPopularProblem, mostPopularCount, top10, fullRank);
         }
     }
 
-    public record NowRankHolder(List<SimpleRankItem> top5, List<SimpleRankItem> top52, int submitCount, double submitAve, double acProportion, String submitDetail,
+    public record NowRankHolder(List<SimpleRankItem> top5, List<SimpleRankItem> top52, long submitUserAmount, int submitCount, double submitAve, double acProportion, String submitDetail,
                                 String firstACName, String firstACInfo) {
         public NowRankHolder(List<SimpleRankItem> top52, SubmissionPackHolder submissionData) {
-            this(submissionData.top5, top52, submissionData.submitCount, submissionData.submitAve, submissionData.acProportion, submissionData.submitDetail, submissionData.firstACName, submissionData.firstACInfo);
+            this(submissionData.top5, top52, submissionData.submitUserAmount, submissionData.submitCount, submissionData.submitAve, submissionData.acProportion, submissionData.submitDetail, submissionData.firstACName, submissionData.firstACInfo);
         }
     }
 
-    public record SubmissionPackHolder(List<SimpleRankItem> top5, int submitCount, double submitAve, double acProportion, String submitDetail,
+    public record SubmissionPackHolder(List<SimpleRankItem> top5, long submitUserAmount, int submitCount, double submitAve, double acProportion, String submitDetail,
                                        String firstACName, String firstACInfo) {
     }
 
