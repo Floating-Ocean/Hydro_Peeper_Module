@@ -23,6 +23,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static flocean.module.peeper.fjnuoj.tool.ImgGenerator.*;
 
@@ -48,7 +50,7 @@ public class Main {
                     else if (args.length == 4 && args[0].equals("/verdict")) generateVerdict(args[1], args[2], args[3]);
                     else if (args.length == 4 && args[0].equals("/user")){
                         if(args[1].equals("id")) generateUserInfo(Integer.parseInt(args[2]), args[3]);
-                        if(args[1].equals("name")) fuzzyMatchUser(args[2], args[3]);
+                        else if(args[1].equals("name")) fuzzyMatchUser(args[2], args[3]);
                         else throw new RunModuleException("Operation Not Supported.");
                     } else printErrorParameter();
                 }
@@ -103,9 +105,21 @@ public class Main {
         FuzzyScore fuzzyScore = new FuzzyScore(Locale.getDefault());
         List<Pair<UserData, Double>> matches = new ArrayList<>();
         for (var each : rankingDataList) {
-            double currentScore = fuzzyScore.fuzzyScore(userName, each.user());
-            if (currentScore >= 0.6) { //0.6的阈值
-                matches.add(Pair.of(new UserData(each.user(), each.id()), currentScore));
+            //解析包含别名的用户名，分开匹配提高准度
+            Pattern pattern = Pattern.compile("(.*?) \\((.*?)\\)");
+            Matcher matcher = pattern.matcher(each.user());
+            if (matcher.matches()) {
+                for (int i = 1; i <= 2; i++) {
+                    double currentScore = fuzzyScore.fuzzyScore(userName, matcher.group(i));
+                    if (currentScore >= 0.6) { //0.6的阈值
+                        matches.add(Pair.of(new UserData(each.user(), each.id()), currentScore));
+                    }
+                }
+            } else {
+                double currentScore = fuzzyScore.fuzzyScore(userName, each.user());
+                if (currentScore >= 0.6) { //0.6的阈值
+                    matches.add(Pair.of(new UserData(each.user(), each.id()), currentScore));
+                }
             }
         }
         matches.sort(Comparator.comparingDouble(o -> -o.B));
@@ -441,8 +455,9 @@ public class Main {
 
         plainResult.append("\n\n社交信息：")
                 .append("\nQQ: ").append(userInfoData.qq());
-        if(!userInfoData.qq().equals("unknown")) plainResult.append("  ").append(userInfoData.qqName());
-        plainResult.append("\n邮箱: ").append(userInfoData.mail().replace(".", " ."));
+        if(!userInfoData.qq().equals("unknown")) plainResult.append(" @").append(userInfoData.qqName());
+        //为了防止被解析成url，给域名包一个 []
+        plainResult.append("\n邮箱: ").append(userInfoData.mail().replaceAll("(\\.\\w+)$", " [$1]"));
 
         int submitCount = currentSubmissionData.size();
         double submitAve = -1, acProportion = -1;

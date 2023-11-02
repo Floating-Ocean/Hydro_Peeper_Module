@@ -29,17 +29,24 @@ public class UserInfoTool {
                 userProgress = profileHolder.getElementsByTag("p").get(1).text();
 
         String qq = "unknown", mail = "unknown";
-        for (var each : contactHolder.getElementsByTag("a")) {
-            if (each.attr("data-tooltip").equals("复制电子邮件")) {
-                mail = new String(Base64.getDecoder().decode(each.attr("data-copy")), StandardCharsets.UTF_8);
-            } else if (each.attr("data-tooltip").equals("复制QQ号")) {
-                qq = new String(Base64.getDecoder().decode(each.attr("data-copy")), StandardCharsets.UTF_8);
-            }
-        }
+        //通过头像读取qq
         if (profileIcon.attr("src").contains("q1.qlogo.cn")) {
             Pattern pattern = Pattern.compile("nk=(\\d+)");
             Matcher matcher = pattern.matcher(profileIcon.attr("src"));
             if (matcher.find()) qq = matcher.group(1);
+        }
+        //通过个人信息读取邮箱和qq
+        for (var each : contactHolder.getElementsByTag("a")) {
+            if (each.attr("data-tooltip").equals("复制电子邮件")) {
+                mail = new String(Base64.getDecoder().decode(each.attr("data-copy")), StandardCharsets.UTF_8);
+            } else if (qq.equals("unknown") && each.attr("data-tooltip").equals("复制QQ号")) {
+                qq = new String(Base64.getDecoder().decode(each.attr("data-copy")), StandardCharsets.UTF_8);
+            }
+        }
+        //通过邮箱解析qq
+        if (qq.equals("unknown") && mail.contains("@qq.com")){
+            String possiblyQQ = mail.replace("@qq.com", "");
+            if(possiblyQQ.chars().allMatch(Character::isDigit)) qq = possiblyQQ;
         }
         StringBuilder description = new StringBuilder();
         for (var each : personalDescription.getElementsByTag("p")) {
