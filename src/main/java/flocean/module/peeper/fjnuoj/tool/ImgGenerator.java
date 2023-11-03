@@ -45,15 +45,13 @@ public class ImgGenerator {
         StyledString top5Subtitle = packString("过题数榜单", "B", 36);
         StyledString top5Title = packString("昨日过题数", "H", 72);
         StyledString top5Mark = packString("Top 5th", "H", 48);
-        List<Pair<Double, StyledString[]>> top5Who = new ArrayList<>();
+        List<RankDrawHolder> top5Who = new ArrayList<>();
         for(var each : fullRankHolder.top5()){
             SubmissionRankItem currentRankItem = new SubmissionRankItem(each, fullRankHolder.top5().get(0).val());
-            StyledString[] current = {
+            top5Who.add(new RankDrawHolder(currentRankItem.getProgress(), !currentRankItem.fetchRank().equals("*"),
                     packString(currentRankItem.fetchRank(), "H", 64),
                     packString(currentRankItem.fetchWho().name(), "B", 36),
-                    packString(currentRankItem.fetchVal(), "H", 36)
-            };
-            top5Who.add(Pair.of(currentRankItem.getProgress(), current));
+                    packString(currentRankItem.fetchVal(), "H", 36)));
         }
 
         StyledString submitCountTitle = packString("提交总数", "B", 36);
@@ -84,28 +82,24 @@ public class ImgGenerator {
         StyledString top10Subtitle = packString("训练榜单", "B", 36);
         StyledString top10Title = packString("新生训练题单完成比", "H", 72);
         StyledString top10Mark = packString("Top 10th", "H", 48);
-        List<Pair<Double, StyledString[]>> top10Who = new ArrayList<>();
+        List<RankDrawHolder> top10Who = new ArrayList<>();
         for(var each : fullRankHolder.top10()){
             TrainingRankItem currentRankItem = new TrainingRankItem(each);
-            StyledString[] current = {
+            top10Who.add(new RankDrawHolder(currentRankItem.getProgress(), !currentRankItem.fetchRank().equals("*"),
                     packString(currentRankItem.fetchRank(), "H", 64),
                     packString(currentRankItem.fetchWho().name(), "B", 36),
-                    packString(currentRankItem.fetchVal(), "H", 36)
-            };
-            top10Who.add(Pair.of(currentRankItem.getProgress(), current));
+                    packString(currentRankItem.fetchVal(), "H", 36)));
         }
 
         StyledString fullRankSubtitle = packString("完整榜单", "B", 36);
         StyledString fullRankTitle = packString("昨日 OJ 总榜", "H", 72);
-        List<Pair<Double, StyledString[]>> fullRankWho = new ArrayList<>();
+        List<RankDrawHolder> fullRankWho = new ArrayList<>();
         for(var each : fullRankHolder.fullRank()){
             SubmissionRankItem currentRankItem = new SubmissionRankItem(each, fullRankHolder.fullRank().get(0).val());
-            StyledString[] current = {
+            fullRankWho.add(new RankDrawHolder(currentRankItem.getProgress(), !currentRankItem.fetchRank().equals("*"),
                     packString(currentRankItem.fetchRank(), "H", 64),
                     packString(currentRankItem.fetchWho().name(), "B", 36),
-                    packString(currentRankItem.fetchVal(), "H", 36)
-            };
-            fullRankWho.add(Pair.of(currentRankItem.getProgress(), current));
+                    packString(currentRankItem.fetchVal(), "H", 36)));
         }
 
         StyledString copyright = packString(String.format(Locale.ROOT, """
@@ -183,15 +177,13 @@ public class ImgGenerator {
         StyledString top5Subtitle = packString("过题数榜单", "B", 36);
         StyledString top5Title = packString("今日过题数", "H", 72);
         StyledString top5Mark = packString("Top 5th", "H", 48);
-        List<Pair<Double, StyledString[]>> top5Who = new ArrayList<>();
+        List<RankDrawHolder> top5Who = new ArrayList<>();
         for(var each : nowRankHolder.top5()){
             SubmissionRankItem currentRankItem = new SubmissionRankItem(each, nowRankHolder.top5().get(0).val());
-            StyledString[] current = {
+            top5Who.add(new RankDrawHolder(currentRankItem.getProgress(), !currentRankItem.fetchRank().equals("*"),
                     packString(currentRankItem.fetchRank(), "H", 64),
                     packString(currentRankItem.fetchWho().name(), "B", 36),
-                    packString(currentRankItem.fetchVal(), "H", 36)
-            };
-            top5Who.add(Pair.of(currentRankItem.getProgress(), current));
+                    packString(currentRankItem.fetchVal(), "H", 36)));
         }
 
         StyledString submitCountTitle = packString("提交总数", "B", 36);
@@ -217,15 +209,13 @@ public class ImgGenerator {
         StyledString top52Subtitle = packString("训练榜单", "B", 36);
         StyledString top52Title = packString("新生训练题单完成比", "H", 72);
         StyledString top52Mark = packString("Top 5th", "H", 48);
-        List<Pair<Double, StyledString[]>> top52Who = new ArrayList<>();
+        List<RankDrawHolder> top52Who = new ArrayList<>();
         for(var each : nowRankHolder.top52()){
             TrainingRankItem currentRankItem = new TrainingRankItem(each);
-            StyledString[] current = {
+            top52Who.add(new RankDrawHolder(currentRankItem.getProgress(), !currentRankItem.fetchRank().equals("*"),
                     packString(currentRankItem.fetchRank(), "H", 64),
                     packString(currentRankItem.fetchWho().name(), "B", 36),
-                    packString(currentRankItem.fetchVal(), "H", 36)
-            };
-            top52Who.add(Pair.of(currentRankItem.getProgress(), current));
+                    packString(currentRankItem.fetchVal(), "H", 36)));
         }
 
         StyledString copyright = packString(String.format(Locale.ROOT, """
@@ -292,15 +282,13 @@ public class ImgGenerator {
         StyledString top10Subtitle = packString("分类型提交榜单", "B", 36);
         StyledString top10Title = packString(verdictRankHolder.verdict.getAlias() + " 排行榜", "H", 72);
         StyledString top10Mark = packString("Top 10th", "H", 48);
-        List<Pair<Double, StyledString[]>> top10Who = new ArrayList<>();
+        List<RankDrawHolder> top10Who = new ArrayList<>();
         for(var each : verdictRankHolder.top10()){
             SubmissionRankItem currentRankItem = new SubmissionRankItem(each, verdictRankHolder.top10().get(0).val());
-            StyledString[] current = {
+            top10Who.add(new RankDrawHolder(currentRankItem.getProgress(), !currentRankItem.fetchRank().equals("*"),
                     packString(currentRankItem.fetchRank(), "H", 64),
                     packString(currentRankItem.fetchWho().name(), "B", 36),
-                    packString(currentRankItem.fetchVal(), "H", 36)
-            };
-            top10Who.add(Pair.of(currentRankItem.getProgress(), current));
+                    packString(currentRankItem.fetchVal(), "H", 36)));
         }
 
         StyledString copyright = packString(String.format(Locale.ROOT, """
@@ -427,24 +415,26 @@ public class ImgGenerator {
      * @param paddingBottom 下边距
      * @param currentY 开始绘制文本的高度
      */
-    private static void drawRankText(Graphics2D outputCanvas, List<Pair<Double, StyledString[]>> content, int paddingBottom, AtomicInteger currentY){
+    private static void drawRankText(Graphics2D outputCanvas, List<RankDrawHolder> content, int paddingBottom, AtomicInteger currentY){
         for(var each : content){
-            int progressLen = (int)(360 + 440 * each.A);
+            int progressLen = (int)(360 + 440 * each.percent);
 
             AtomicInteger lineY = new AtomicInteger(currentY.get());
             int currentX = 128 + 32;
-            drawText(outputCanvas, each.B[0], currentX, 12, currentY);
+            outputCanvas.setColor(new Color(0, 0, 0, each.rated ? 255 : 100));
+            drawText(outputCanvas, each.strings[0], currentX, 12, currentY);
 
-            currentX += ImgConvert.calculateStringWidth(each.B[0].font, each.B[0].content) + 28;
+            currentX += ImgConvert.calculateStringWidth(each.strings[0].font, each.strings[0].content) + 28;
             currentY.set(lineY.get() + 40);
-            drawText(outputCanvas, each.B[1], currentX, 12, currentY);
+            drawText(outputCanvas, each.strings[1], currentX, 12, currentY);
 
-            currentX = Math.max(progressLen + 128, currentX + ImgConvert.calculateStringWidth(each.B[1].font, each.B[1].content)) + 36;
+            currentX = Math.max(progressLen + 128, currentX + ImgConvert.calculateStringWidth(each.strings[1].font, each.strings[1].content)) + 36;
             currentY.set(lineY.get() + 40);
-            drawText(outputCanvas, each.B[2], currentX, 32, currentY);
+            drawText(outputCanvas, each.strings[2], currentX, 32, currentY);
 
             LinearGradientPaint tilePaint = new LinearGradientPaint(0, 52, progressLen, 52, new float[]{0.0f, 0.5f, 1.0f},
-                    new Color[]{new Color(0, 0, 0, 14), new Color(0, 0, 0, 28), new Color(0, 0, 0, 32)});
+                    new Color[]{new Color(0, 0, 0, each.rated ? 14 : 10),
+                            new Color(0, 0, 0, each.rated ? 28 : 15), new Color(0, 0, 0, each.rated ? 32 : 18)});
             outputCanvas.setPaint(tilePaint);
             outputCanvas.fillRoundRect(128, lineY.get() + 50, progressLen, 52, 52, 52);
 
@@ -529,7 +519,7 @@ public class ImgGenerator {
      * @param strings 多个文本
      * @return 总高度
      */
-    public static int calculateHeight(StyledString... strings) {
+    private static int calculateHeight(StyledString... strings) {
         int height = 0;
         for (var each : strings) height += each.height;
         return height;
@@ -542,10 +532,10 @@ public class ImgGenerator {
      * @return 总高
      */
     @SafeVarargs
-    public static int calculateHeight(List<Pair<Double, StyledString[]>>... strings) {
+    private static int calculateHeight(List<RankDrawHolder>... strings) {
         int height = 0;
         for(var string : strings) {
-            for (var each : string) height += each.B[1].height + 40 + 32;
+            for (var each : string) height += each.strings[1].height + 40 + 32;
             height -= 32;
         }
         return height;
@@ -565,6 +555,9 @@ public class ImgGenerator {
             throw new RunModuleException("File saved unsuccessfully.");
         }
         ImageIO.write(img, "png", file);
+    }
+
+    private record RankDrawHolder(double percent, boolean rated, StyledString... strings){
     }
 
     public record UserInfoHolder(UserInfoData userInfoData, int submitCount, double submitAve, double acProportion, String submitDetail,
