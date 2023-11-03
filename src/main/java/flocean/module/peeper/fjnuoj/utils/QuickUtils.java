@@ -93,15 +93,19 @@ public class QuickUtils {
         return generateFileName("rank", date, suffix);
     }
 
+    public static void saveJsonData(Object data, String prefix) throws Throwable {
+        saveJsonData(data, prefix, false);
+    }
+
     /**
      * 以 json 格式保存今日凌晨排行榜数据
      *
      * @param data 包装后的排行榜数据
      * @throws Throwable 异常信息
      */
-    public static void saveJsonData(Object data, String prefix) throws Throwable {
+    public static void saveJsonData(Object data, String prefix, boolean force) throws Throwable {
         String path = Global.config.workPath() + "/data/" + QuickUtils.generateFileName(prefix, new Date(), "json");
-        if (new File(path).exists()) return; //不重复写入
+        if (!force && new File(path).exists()) return; //不重复写入
         File file = QuickUtils.fetchFile(path);
         if (file == null || !file.delete() || !file.createNewFile()) {
             throw new RuntimeException("File saved unsuccessfully.");

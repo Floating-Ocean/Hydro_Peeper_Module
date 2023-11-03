@@ -44,17 +44,15 @@ public class Main {
                 } else if (args.length == 2 && args[0].equals("/version")) {
                     System.out.println(Global.buildInfo);
                     saveTextLocally(Global.buildInfo, args[1]);
-                } else {
-                    if (args.length == 1 && args[0].equals("/update")) generateCompletely(null, null);
-                    else if (args.length == 3 && args[0].equals("/full")) generateCompletely(args[1], args[2]);
-                    else if (args.length == 3 && args[0].equals("/now")) generateTemporarily(args[1], args[2]);
-                    else if (args.length == 4 && args[0].equals("/verdict")) generateVerdict(args[1], args[2], args[3]);
-                    else if (args.length == 4 && args[0].equals("/user")){
-                        if(args[1].equals("id")) generateUserInfo(Integer.parseInt(args[2]), args[3]);
-                        else if(args[1].equals("name")) fuzzyMatchUser(args[2], args[3]);
-                        else throw new RunModuleException("Operation Not Supported.");
-                    } else printErrorParameter();
-                }
+                } else if (args.length == 1 && args[0].equals("/update")) generateCompletely(null, null);
+                else if (args.length == 3 && args[0].equals("/full")) generateCompletely(args[1], args[2]);
+                else if (args.length == 3 && args[0].equals("/now")) generateTemporarily(args[1], args[2]);
+                else if (args.length == 4 && args[0].equals("/verdict")) generateVerdict(args[1], args[2], args[3]);
+                else if (args.length == 4 && args[0].equals("/user")) {
+                    if (args[1].equals("id")) generateUserInfo(Integer.parseInt(args[2]), args[3]);
+                    else if (args[1].equals("name")) fuzzyMatchUser(args[2], args[3]);
+                    else throw new RunModuleException("Operation Not Supported.");
+                } else printErrorParameter();
             } else printErrorParameter();
         } catch (Throwable e) {
             Logger.getGlobal().log(Level.SEVERE, e.getMessage(), e);
@@ -319,6 +317,8 @@ public class Main {
             //Step5. 生成结果
             System.out.println("\n正在生成结果\n\n");
             result = packFullResult(deltaRankingData, submissionData, verdictData, firstACData, mostPopularProblem, newbieTrainingData);
+
+            QuickUtils.saveJsonData(result, "daily", true);
         }
 
         if(imgPath != null) ImgGenerator.generateFullRankImg(result.fullRankHolder(), imgPath);
