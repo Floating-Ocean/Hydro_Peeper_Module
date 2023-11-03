@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONWriter;
 import flocean.module.peeper.fjnuoj.config.Global;
+import flocean.module.peeper.fjnuoj.data.DailyRankData;
 import flocean.module.peeper.fjnuoj.data.RankingData;
 import flocean.module.peeper.fjnuoj.lang.RunModuleException;
 import flocean.module.peeper.fjnuoj.utils.QuickUtils;
@@ -48,68 +49,15 @@ public class RankTool {
     }
 
     /**
-     * 按照 pre + date(yyy_MM_dd) + . + suffix 的格式输出文件名
-     *
-     * @param pre    前缀
-     * @param date   日期
-     * @param suffix 后缀（拓展名）
-     * @return 文件名
-     */
-    public static String generateFileName(String pre, Date date, String suffix) {
-        return pre + "_" + new SimpleDateFormat("yyyy_MM_dd").format(date) + "." + suffix;
-    }
-
-    /**
-     * 按照 pre + date(yyy_MM_dd) + _ + System.currentTimeMillis() + . + suffix 的格式输出文件名
-     * 即附加一个当前时间戳，防止文件重名
-     *
-     * @param pre    前缀
-     * @param date   日期
-     * @param suffix 后缀（拓展名）
-     * @return 文件名
-     */
-    public static String generateFileNameWithMills(String pre, Date date, String suffix) {
-        return pre + "_" + new SimpleDateFormat("yyyy_MM_dd").format(date) + "_" + System.currentTimeMillis() + "." + suffix;
-    }
-
-    /**
-     * 按照 "rank" + date(yyy_MM_dd) + . + suffix 的格式输出文件名
-     *
-     * @param date   日期
-     * @param suffix 后缀（拓展名）
-     * @return 文件名
-     */
-    public static String generateFileName(Date date, String suffix) {
-        return generateFileName("rank", date, suffix);
-    }
-
-    /**
-     * 以 json 格式保存今日凌晨排行榜数据
-     *
-     * @param data 包装后的排行榜数据
-     * @throws Throwable 异常信息
-     */
-    public static void updateTodayData(List<RankingData> data) throws Throwable {
-        if (new File(Global.config.workPath() + "/data/" + generateFileName(new Date(), "json")).exists()) return; //不重复写入
-        File file = QuickUtils.fetchFile(Global.config.workPath() + "/data/" + generateFileName(new Date(), "json"));
-        if (file == null || !file.delete() || !file.createNewFile()) {
-            throw new RuntimeException("File saved unsuccessfully.");
-        }
-        JSON.writeTo(new FileOutputStream(file), data, JSONWriter.Feature.PrettyFormat);
-    }
-
-    /**
      * 读取昨日排行榜数据 json
      *
      * @return 包装后的昨日排行榜数据
      * @throws Throwable 异常信息
      */
     public static List<RankingData> fetchYesterdayData() throws Throwable {
-        String path = Global.config.workPath() + "/data/" + generateFileName(new Date(System.currentTimeMillis() - 86400 * 1000), "json");
-        File file = QuickUtils.fetchFile(path);
-        if (file == null) throw new RunModuleException("file not found:" + path);
-        String result = Files.readString(file.toPath());
-        return JSONArray.parseArray(result, RankingData.class);
+        return QuickUtils.fetchJsonArrayData(
+                QuickUtils.generateFileName(new Date(System.currentTimeMillis() - 86400 * 1000), "json"),
+                RankingData.class);
     }
 
     /**
@@ -119,10 +67,19 @@ public class RankTool {
      * @throws Throwable 异常信息
      */
     public static List<RankingData> fetchTodayData() throws Throwable {
-        String path = Global.config.workPath() + "/data/" + generateFileName(new Date(System.currentTimeMillis()), "json");
-        File file = QuickUtils.fetchFile(path);
-        if (file == null) throw new RunModuleException("file not found:" + path);
-        String result = Files.readString(file.toPath());
-        return JSONArray.parseArray(result, RankingData.class);
+        return QuickUtils.fetchJsonArrayData(
+                QuickUtils.generateFileName(new Date(System.currentTimeMillis()), "json"),
+                RankingData.class);
+    }
+
+
+    public static DailyRankData fetchDailyRankData() throws Throwable {
+        try {
+            return QuickUtils.fetchJsonData(
+                    QuickUtils.generateFileName("daily", new Date(System.currentTimeMillis()), "json"),
+                    DailyRankData.class);
+        }catch(RunModuleException exception){
+            return null;
+        }
     }
 }

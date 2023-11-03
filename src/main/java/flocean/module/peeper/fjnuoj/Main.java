@@ -45,7 +45,8 @@ public class Main {
                     System.out.println(Global.buildInfo);
                     saveTextLocally(Global.buildInfo, args[1]);
                 } else {
-                    if (args.length == 3 && args[0].equals("/full")) generateCompletely(args[1], args[2]);
+                    if (args.length == 1 && args[0].equals("/update")) generateCompletely(null, null);
+                    else if (args.length == 3 && args[0].equals("/full")) generateCompletely(args[1], args[2]);
                     else if (args.length == 3 && args[0].equals("/now")) generateTemporarily(args[1], args[2]);
                     else if (args.length == 4 && args[0].equals("/verdict")) generateVerdict(args[1], args[2], args[3]);
                     else if (args.length == 4 && args[0].equals("/user")){
@@ -84,8 +85,8 @@ public class Main {
      *
      * @return 必要性
      */
-    private static boolean checkNecessity() {
-        return !new File(Global.config.workPath() + "/data/" + RankTool.generateFileName(new Date(System.currentTimeMillis()), "json")).exists();
+    private static boolean checkNecessity() throws Throwable{
+        return RankTool.fetchDailyRankData() == null;
     }
 
 
@@ -271,59 +272,59 @@ public class Main {
      * @throws Throwable 异常信息
      */
     private static void generateCompletely(String imgPath, String plainPath) throws Throwable {
-        if (new File(Global.config.workPath() + "/data/" + RankTool.generateFileName(new Date(System.currentTimeMillis()), "json")).exists()) {
+        DailyRankData result = RankTool.fetchDailyRankData();
+
+        if(result != null){
             System.out.println("重复生成榜单，将不再爬取");
-            return;
+        }else {
+            //Step1. 刷新RP
+            callReloadRP();
+
+            //Step2. 爬取排行榜数据
+            System.out.println("\n正在爬取排行榜数据");
+            List<RankingData> rankingDataList = RankTool.fetchData();
+            System.out.println("爬取完成，正在处理排行榜数据");
+
+            System.out.print("更新今日数据");
+            QuickUtils.saveJsonData(rankingDataList, "rank");
+            System.out.println("， 完成");
+
+            System.out.print("读取昨日数据");
+            List<RankingData> yesterdayData = RankTool.fetchYesterdayData();
+            System.out.println("， 完成");
+
+            System.out.print("开始数据分析");
+            List<RankingData> deltaRankingData = dealRankingData(rankingDataList, yesterdayData);
+            System.out.println("， 完成");
+
+            //Step3. 爬取昨天所有提交记录
+            System.out.println("\n正在爬取昨天的所有提交记录");
+            List<SubmissionData> submissionData = SubmissionTool.fetchData();
+            System.out.println("爬取完成，正在处理提交数据");
+
+            System.out.print("分类答案判定");
+            Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData = SubmissionTool.classifyVerdict(submissionData);
+            System.out.println("， 完成");
+
+            System.out.print("开始数据分析");
+            CounterData mostPopularProblem = SubmissionTool.findMostPopularProblem(submissionData);
+            Pair<Long, Pair<UserData, String>> firstACData = SubmissionTool.getFirstACAttempt(submissionData);
+            System.out.println("， 完成");
+
+            //Step4. 爬取训练数据
+            System.out.println("\n正在爬取新生前20名的训练数据");
+            List<TrainingData> newbieTrainingData = dealTrainingData(rankingDataList);
+            System.out.println("完成");
+
+            //Step5. 生成结果
+            System.out.println("\n正在生成结果\n\n");
+            result = packFullResult(deltaRankingData, submissionData, verdictData, firstACData, mostPopularProblem, newbieTrainingData);
         }
 
-        //Step1. 刷新RP
-        callReloadRP();
+        if(imgPath != null) ImgGenerator.generateFullRankImg(result.fullRankHolder(), imgPath);
+        if(plainPath != null) saveTextLocally(result.plain(), plainPath);
 
-        //Step2. 爬取排行榜数据
-        System.out.println("\n正在爬取排行榜数据");
-        List<RankingData> rankingDataList = RankTool.fetchData();
-        System.out.println("爬取完成，正在处理排行榜数据");
-
-        System.out.print("更新今日数据");
-        RankTool.updateTodayData(rankingDataList);
-        System.out.println("， 完成");
-
-        System.out.print("读取昨日数据");
-        List<RankingData> yesterdayData = RankTool.fetchYesterdayData();
-        System.out.println("， 完成");
-
-        System.out.print("开始数据分析");
-        List<RankingData> deltaRankingData = dealRankingData(rankingDataList, yesterdayData);
-        System.out.println("， 完成");
-
-        //Step3. 爬取昨天所有提交记录
-        System.out.println("\n正在爬取昨天的所有提交记录");
-        List<SubmissionData> submissionData = SubmissionTool.fetchData();
-        System.out.println("爬取完成，正在处理提交数据");
-
-        System.out.print("分类答案判定");
-        Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData = SubmissionTool.classifyVerdict(submissionData);
-        System.out.println("， 完成");
-
-        System.out.print("开始数据分析");
-        CounterData mostPopularProblem = SubmissionTool.findMostPopularProblem(submissionData);
-        Pair<Long, Pair<UserData, String>> firstACData = SubmissionTool.getFirstACAttempt(submissionData);
-        System.out.println("， 完成");
-
-
-        //Step4. 爬取训练数据
-        System.out.println("\n正在爬取新生前20名的训练数据");
-        List<TrainingData> newbieTrainingData = dealTrainingData(rankingDataList);
-        System.out.println("完成");
-
-
-        //Step5. 生成结果
-        System.out.println("\n正在生成结果\n\n");
-        Pair<FullRankHolder, String> result = packFullResult(deltaRankingData, submissionData, verdictData, firstACData, mostPopularProblem, newbieTrainingData);
-        ImgGenerator.generateFullRankImg(result.A, imgPath);
-        saveTextLocally(result.B, plainPath);
-
-        System.out.println(result.B);
+        System.out.println(result.plain());
     }
 
 
@@ -549,7 +550,7 @@ public class Main {
      * @param newbieTrainingData 新生训练数据
      * @return 处理完成后的每日总榜数据 <包装数据，文本结果>
      */
-    private static Pair<FullRankHolder, String> packFullResult(
+    private static DailyRankData packFullResult(
             List<RankingData> deltaRankingData,
             List<SubmissionData> submissionData,
             Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData,
@@ -593,7 +594,7 @@ public class Main {
                 .append(" ")
                 .append(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
 
-        return Pair.of(new FullRankHolder(top1, submissionPackHolder, mostPopularProblem, mostPopularCount, top10.B, fullRank.B), plainResult.toString());
+        return new DailyRankData(new FullRankHolder(top1, submissionPackHolder, mostPopularProblem, mostPopularCount, top10.B, fullRank.B), plainResult.toString());
     }
 
 
