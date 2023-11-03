@@ -3,9 +3,10 @@ package flocean.module.peeper.fjnuoj.tool;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONWriter;
-import flocean.module.peeper.fjnuoj.cookie.SignedInCookie;
+import flocean.module.peeper.fjnuoj.config.Global;
 import flocean.module.peeper.fjnuoj.data.RankingData;
-import flocean.module.peeper.fjnuoj.utils.ModuleFile;
+import flocean.module.peeper.fjnuoj.lang.RunModuleException;
+import flocean.module.peeper.fjnuoj.utils.QuickUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -29,8 +30,8 @@ public class RankTool {
     public static List<RankingData> fetchData() throws Throwable {
         List<RankingData> rankingDataList = new ArrayList<>();
         for (int i = 1; i <= 4; i++) {
-            final String url = "https://fjnuacm.top/d/junior/ranking?page=" + i;
-            Document document = SignedInCookie.wrapWithCookie(Jsoup.connect(url)).get();
+            final String url = Global.config.ojUrl() + "ranking?page=" + i;
+            Document document = QuickUtils.wrapWithCookie(Jsoup.connect(url)).get();
             Element data = document.getElementsByClass("data-table").get(0)
                     .getElementsByTag("tbody").get(0);
             for (var each : data.getElementsByTag("tr")) {
@@ -89,8 +90,8 @@ public class RankTool {
      * @throws Throwable 异常信息
      */
     public static void updateTodayData(List<RankingData> data) throws Throwable {
-        if (new File(ModuleFile.path + "/data/" + generateFileName(new Date(), "json")).exists()) return; //不重复写入
-        File file = ModuleFile.fetchFile(ModuleFile.path + "/data/" + generateFileName(new Date(), "json"));
+        if (new File(Global.config.workPath() + "/data/" + generateFileName(new Date(), "json")).exists()) return; //不重复写入
+        File file = QuickUtils.fetchFile(Global.config.workPath() + "/data/" + generateFileName(new Date(), "json"));
         if (file == null || !file.delete() || !file.createNewFile()) {
             throw new RuntimeException("File saved unsuccessfully.");
         }
@@ -104,8 +105,9 @@ public class RankTool {
      * @throws Throwable 异常信息
      */
     public static List<RankingData> fetchYesterdayData() throws Throwable {
-        File file = ModuleFile.fetchFile(ModuleFile.path + "/data/" + generateFileName(new Date(System.currentTimeMillis() - 86400 * 1000), "json"));
-        if (file == null) return null;
+        String path = Global.config.workPath() + "/data/" + generateFileName(new Date(System.currentTimeMillis() - 86400 * 1000), "json");
+        File file = QuickUtils.fetchFile(path);
+        if (file == null) throw new RunModuleException("file not found:" + path);
         String result = Files.readString(file.toPath());
         return JSONArray.parseArray(result, RankingData.class);
     }
@@ -117,8 +119,9 @@ public class RankTool {
      * @throws Throwable 异常信息
      */
     public static List<RankingData> fetchTodayData() throws Throwable {
-        File file = ModuleFile.fetchFile(ModuleFile.path + "/data/" + generateFileName(new Date(System.currentTimeMillis()), "json"));
-        if (file == null) return null;
+        String path = Global.config.workPath() + "/data/" + generateFileName(new Date(System.currentTimeMillis()), "json");
+        File file = QuickUtils.fetchFile(path);
+        if (file == null) throw new RunModuleException("file not found:" + path);
         String result = Files.readString(file.toPath());
         return JSONArray.parseArray(result, RankingData.class);
     }

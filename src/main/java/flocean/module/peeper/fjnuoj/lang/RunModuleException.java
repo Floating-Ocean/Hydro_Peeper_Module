@@ -3,11 +3,11 @@ package flocean.module.peeper.fjnuoj.lang;
 public class RunModuleException extends RuntimeException {
 
     public RunModuleException(String s) {
-        super("The silly program encountered into a strange problem. Here are the details: " + s);
+        super(s);
     }
 
     public RunModuleException(String s, Throwable cause) {
-        super("The silly program encountered into a strange problem. Here are the details: " + s, cause);
+        super(s, cause);
     }
 
     public RunModuleException(Throwable cause) {

@@ -1,4 +1,6 @@
 package flocean.module.peeper.fjnuoj.data.rank;
 
-public record SimpleRankItem(String rank, String who, int val){
+import flocean.module.peeper.fjnuoj.data.UserData;
+
+public record SimpleRankItem(String rank, UserData who, int val){
 }

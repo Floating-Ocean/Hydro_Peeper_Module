@@ -1,8 +1,9 @@
 package flocean.module.peeper.fjnuoj.tool;
 
-import flocean.module.peeper.fjnuoj.cookie.SignedInCookie;
+import flocean.module.peeper.fjnuoj.config.Global;
 import flocean.module.peeper.fjnuoj.enums.VerdictType;
 import flocean.module.peeper.fjnuoj.lang.RunModuleException;
+import flocean.module.peeper.fjnuoj.utils.QuickUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -19,8 +20,8 @@ public class RPReloader {
      * @throws Throwable 异常信息
      */
     public static void reload() throws Throwable {
-        final String rpUrl = "https://fjnuacm.top/d/junior/manage/script";
-        Document rpDocument = SignedInCookie.wrapWithCookie(Jsoup.connect(rpUrl))
+        final String rpUrl = Global.config.ojUrl() + "manage/script";
+        Document rpDocument = QuickUtils.wrapWithCookie(Jsoup.connect(rpUrl))
                 .requestBody("{\"args\":\"\",\"id\":\"rp\"}")
                 .header("Content-Type", "application/json")
                 .post();
@@ -44,8 +45,8 @@ public class RPReloader {
             if(nowTime - lastQueryTime < 1000) continue; //1秒检查一次
             lastQueryTime = nowTime;
 
-            final String runUrl = "https://fjnuacm.top/d/junior/record/" + ridValue;
-            Document runDocument = SignedInCookie.wrapWithCookie(Jsoup.connect(runUrl)).get();
+            final String runUrl = Global.config.ojUrl() + "record/" + ridValue;
+            Document runDocument = QuickUtils.wrapWithCookie(Jsoup.connect(runUrl)).get();
             Element runStatus = runDocument.getElementsByClass("record-status--text").get(0);
 
             status = runStatus.text();

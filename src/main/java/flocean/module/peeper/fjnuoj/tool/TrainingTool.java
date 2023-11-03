@@ -1,8 +1,9 @@
 package flocean.module.peeper.fjnuoj.tool;
 
-import flocean.module.peeper.fjnuoj.cookie.SignedInCookie;
+import flocean.module.peeper.fjnuoj.config.Global;
 import flocean.module.peeper.fjnuoj.data.RankingData;
 import flocean.module.peeper.fjnuoj.data.TrainingData;
+import flocean.module.peeper.fjnuoj.utils.QuickUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -31,8 +32,8 @@ public class TrainingTool {
 
 
     public static int fetchSingleData(int uid) throws Throwable{
-        final String url = "https://fjnuacm.top/d/junior/training/64bcda4defe7b59ef9a36453?uid=" + uid;
-        Document document = SignedInCookie.wrapWithCookie(Jsoup.connect(url)).get();
+        final String url = Global.config.ojUrl() + "training/64bcda4defe7b59ef9a36453?uid=" + uid;
+        Document document = QuickUtils.wrapWithCookie(Jsoup.connect(url)).get();
 
         Element status = document.getElementsByClass("large horizontal").get(0)
                 .getElementsByTag("dd").get(0);

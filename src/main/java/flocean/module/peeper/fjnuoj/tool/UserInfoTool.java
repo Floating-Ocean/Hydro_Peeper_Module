@@ -1,8 +1,8 @@
 package flocean.module.peeper.fjnuoj.tool;
 
-import flocean.module.peeper.fjnuoj.cookie.SignedInCookie;
+import flocean.module.peeper.fjnuoj.config.Global;
 import flocean.module.peeper.fjnuoj.data.UserInfoData;
-import flocean.module.peeper.fjnuoj.utils.QQInfo;
+import flocean.module.peeper.fjnuoj.utils.QuickUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -15,8 +15,8 @@ import java.util.regex.Pattern;
 public class UserInfoTool {
 
     public static UserInfoData fetchData(int uid) throws Throwable {
-        final String url = "https://fjnuacm.top/d/junior/user/" + uid;
-        Document document = SignedInCookie.wrapWithCookie(Jsoup.connect(url)).get();
+        final String url = Global.config.ojUrl() + "user/" + uid;
+        Document document = QuickUtils.wrapWithCookie(Jsoup.connect(url)).get();
 
         Element profileHolder = document.getElementsByClass("profile-header__main").get(0);
         Element profileIcon = document.getElementsByClass("profile-header__content").get(0)
@@ -55,7 +55,7 @@ public class UserInfoTool {
         }
 
         String qqName = null;
-        if(!qq.equals("unknown")) qqName = QQInfo.getUserName(qq);
+        if(!qq.equals("unknown")) qqName = QuickUtils.getQQName(qq);
 
         return new UserInfoData(userName, userStatus, userProgress, mail, qq, qqName, description.toString());
     }

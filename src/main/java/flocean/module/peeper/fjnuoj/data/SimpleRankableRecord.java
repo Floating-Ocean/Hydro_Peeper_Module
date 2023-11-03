@@ -1,9 +1,10 @@
 package flocean.module.peeper.fjnuoj.data;
 
-public record SimpleRankableRecord(String user, int count) implements RankableRecord {
+public record SimpleRankableRecord(UserData user, int count) implements RankableRecord {
+
     @Override
-    public String fetchName() {
-        return user().split(" \\(")[0];
+    public UserData fetchWho() {
+        return new UserData(user().name().split(" \\(")[0], user().id());
     }
 
     @Override

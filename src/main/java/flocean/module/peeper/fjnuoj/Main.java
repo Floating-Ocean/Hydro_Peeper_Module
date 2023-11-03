@@ -2,22 +2,22 @@ package flocean.module.peeper.fjnuoj;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONWriter;
+import flocean.module.peeper.fjnuoj.config.Global;
 import flocean.module.peeper.fjnuoj.data.*;
-import flocean.module.peeper.fjnuoj.data.RankableRecord;
 import flocean.module.peeper.fjnuoj.data.rank.SimpleRankItem;
-import flocean.module.peeper.fjnuoj.data.SimpleRankableRecord;
+import flocean.module.peeper.fjnuoj.enums.VerdictType;
 import flocean.module.peeper.fjnuoj.lang.RunModuleException;
 import flocean.module.peeper.fjnuoj.tool.*;
 import flocean.module.peeper.fjnuoj.utils.CrashHandler;
 import flocean.module.peeper.fjnuoj.utils.Pair;
-import flocean.module.peeper.fjnuoj.utils.ModuleFile;
-import flocean.module.peeper.fjnuoj.enums.VerdictType;
+import flocean.module.peeper.fjnuoj.utils.QuickUtils;
 import org.apache.commons.text.similarity.FuzzyScore;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -31,8 +31,9 @@ import static flocean.module.peeper.fjnuoj.tool.ImgGenerator.*;
 public class Main {
 
     public static void main(String[] args) {
+        System.out.println(Global.config.workPath() + "/bug/out.txt");
         try {
-            saveTextLocally("ok", ModuleFile.path + "/bug/out.txt");
+            saveTextLocally("ok", Global.config.workPath() + "/bug/out.txt");
         } catch (Throwable e) {
             Logger.getGlobal().log(Level.SEVERE, e.getMessage(), e);
         }
@@ -41,9 +42,8 @@ public class Main {
                 if (args.length == 1 && args[0].equals("/necessity")) {
                     System.out.println(checkNecessity() ? "needed" : "useless");
                 } else if (args.length == 2 && args[0].equals("/version")) {
-                    String version = VersionControl.fetchVersionInfo(Main.class);
-                    System.out.println(version);
-                    saveTextLocally(version, args[1]);
+                    System.out.println(Global.buildInfo);
+                    saveTextLocally(Global.buildInfo, args[1]);
                 } else {
                     if (args.length == 3 && args[0].equals("/full")) generateCompletely(args[1], args[2]);
                     else if (args.length == 3 && args[0].equals("/now")) generateTemporarily(args[1], args[2]);
@@ -58,7 +58,7 @@ public class Main {
         } catch (Throwable e) {
             Logger.getGlobal().log(Level.SEVERE, e.getMessage(), e);
             try {
-                saveTextLocally(CrashHandler.handleError(e), ModuleFile.path + "/bug/out.txt");
+                saveTextLocally(CrashHandler.handleError(e), Global.config.workPath() + "/bug/out.txt");
             } catch (Throwable ee) {
                 Logger.getGlobal().log(Level.SEVERE, e.getMessage(), e);
             }
@@ -85,7 +85,7 @@ public class Main {
      * @return 必要性
      */
     private static boolean checkNecessity() {
-        return !new File(ModuleFile.path + "/data/" + RankTool.generateFileName(new Date(System.currentTimeMillis()), "json")).exists();
+        return !new File(Global.config.workPath() + "/data/" + RankTool.generateFileName(new Date(System.currentTimeMillis()), "json")).exists();
     }
 
 
@@ -112,13 +112,13 @@ public class Main {
                 for (int i = 1; i <= 2; i++) {
                     double currentScore = fuzzyScore.fuzzyScore(userName, matcher.group(i));
                     if (currentScore >= 0.6) { //0.6的阈值
-                        matches.add(Pair.of(new UserData(each.user(), each.id()), currentScore));
+                        matches.add(Pair.of(each.packUser(), currentScore));
                     }
                 }
             } else {
                 double currentScore = fuzzyScore.fuzzyScore(userName, each.user());
                 if (currentScore >= 0.6) { //0.6的阈值
-                    matches.add(Pair.of(new UserData(each.user(), each.id()), currentScore));
+                    matches.add(Pair.of(each.packUser(), currentScore));
                 }
             }
         }
@@ -151,7 +151,7 @@ public class Main {
         System.out.println("爬取完成，正在处理提交数据");
 
         System.out.print("筛选该用户提交");
-        List<SubmissionData> currentSubmissionData = new ArrayList<>(submissionData.stream().filter(o -> o.id() == uid).toList());
+        List<SubmissionData> currentSubmissionData = new ArrayList<>(submissionData.stream().filter(o -> o.user().id() == uid).toList());
         currentSubmissionData.sort(Comparator.comparingLong(o -> -o.at()));
         System.out.println("， 完成");
 
@@ -245,7 +245,7 @@ public class Main {
         System.out.println("， 完成");
 
         System.out.print("开始数据分析");
-        Pair<Long, Pair<String, String>> firstACData = SubmissionTool.getFirstACAttempt(submissionData);
+        Pair<Long, Pair<UserData, String>> firstACData = SubmissionTool.getFirstACAttempt(submissionData);
         System.out.println("， 完成");
 
         //Step3. 爬取训练数据
@@ -271,7 +271,7 @@ public class Main {
      * @throws Throwable 异常信息
      */
     private static void generateCompletely(String imgPath, String plainPath) throws Throwable {
-        if (new File(ModuleFile.path + "/data/" + RankTool.generateFileName(new Date(System.currentTimeMillis()), "json")).exists()) {
+        if (new File(Global.config.workPath() + "/data/" + RankTool.generateFileName(new Date(System.currentTimeMillis()), "json")).exists()) {
             System.out.println("重复生成榜单，将不再爬取");
             return;
         }
@@ -307,7 +307,7 @@ public class Main {
 
         System.out.print("开始数据分析");
         CounterData mostPopularProblem = SubmissionTool.findMostPopularProblem(submissionData);
-        Pair<Long, Pair<String, String>> firstACData = SubmissionTool.getFirstACAttempt(submissionData);
+        Pair<Long, Pair<UserData, String>> firstACData = SubmissionTool.getFirstACAttempt(submissionData);
         System.out.println("， 完成");
 
 
@@ -346,7 +346,7 @@ public class Main {
      * @throws Throwable 异常信息
      */
     private static void saveTextLocally(String info, String path) throws Throwable {
-        File file = ModuleFile.fetchFile(path);
+        File file = QuickUtils.fetchFile(path);
         if (file == null || !file.delete() || !file.createNewFile()) {
             throw new RunModuleException("File saved unsuccessfully.");
         }
@@ -378,7 +378,8 @@ public class Main {
             List<RankingData> rankingDataList,
             int limit) throws Throwable {
 
-        List<RankingData> newbieRankingData = new ArrayList<>(rankingDataList.stream().filter(x -> x.id() >= 1014).toList());
+        List<RankingData> newbieRankingData = new ArrayList<>(rankingDataList.stream()
+                .filter(x -> x.id() >= 1014).toList());
         newbieRankingData.sort((o1, o2) ->
                 o1.ac() == o2.ac() ? Integer.compare(o1.rank(), o2.rank()) : -Integer.compare(o1.ac(), o2.ac()));
 
@@ -435,7 +436,7 @@ public class Main {
             List<SubmissionData> currentSubmissionData,
             Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData,
             int trainingProgress
-    ) throws Throwable {
+    ) {
 
         StringBuilder plainResult = new StringBuilder();
         plainResult.append("用户信息查询：\n\n");
@@ -490,7 +491,7 @@ public class Main {
                 .append(String.format(Locale.ROOT, """
                         Generated by %s.
                         ©2023 Floating Ocean.
-                        At""", VersionControl.fetchVersionInfoInline(Main.class)))
+                        At""", Global.buildInfoInline))
                 .append(" ")
                 .append(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
 
@@ -511,9 +512,9 @@ public class Main {
             List<RankingData> deltaRankingData,
             List<SubmissionData> submissionData,
             Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData,
-            Pair<Long, Pair<String, String>> firstACdata,
+            Pair<Long, Pair<UserData, String>> firstACdata,
             List<TrainingData> newbieTrainingData
-    ) throws Throwable {
+    ) {
 
         StringBuilder plainResult = new StringBuilder();
         plainResult.append("今日当前题数榜单：\n\n");
@@ -522,14 +523,14 @@ public class Main {
         SubmissionPackHolder submissionPackHolder = packSubmissionPackData(submissionData, verdictData, firstACdata, deltaRankingData, plainResult);
 
         plainResult.append("\n新生训练题单完成比 Top 5：\n");
-        Pair<StringBuilder, List<SimpleRankItem>> top52 = generateRank(newbieTrainingData, 5, null, "%");
+        Pair<StringBuilder, List<SimpleRankItem>> top52 = generateRank(newbieTrainingData, 5, x -> !Global.config.excludeID().contains(x.user().id()), "%");
         plainResult.append(top52.A);
 
         plainResult.append("\n--------\n")
                 .append(String.format(Locale.ROOT, """
                         Generated by %s.
                         ©2023 Floating Ocean.
-                        At""", VersionControl.fetchVersionInfoInline(Main.class)))
+                        At""", Global.buildInfoInline))
                 .append(" ")
                 .append(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
 
@@ -552,15 +553,16 @@ public class Main {
             List<RankingData> deltaRankingData,
             List<SubmissionData> submissionData,
             Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData,
-            Pair<Long, Pair<String, String>> firstACdata,
+            Pair<Long, Pair<UserData, String>> firstACdata,
             CounterData mostPopular,
             List<TrainingData> newbieTrainingData
-    ) throws Throwable {
+    ) {
 
         StringBuilder plainResult = new StringBuilder();
         plainResult.append("昨日卷王天梯榜：\n\n");
 
-        String top1 = deltaRankingData.get(0).user();
+        String top1 = deltaRankingData.stream()
+                .filter(x -> !Global.config.excludeID().contains(x.id())).toList().get(0).user();
         plainResult.append("昨日卷王：\n")
                 .append(top1);
         List<RankingData> deltaNewbie = deltaRankingData.stream().filter(x -> x.id() >= 1014).toList();
@@ -574,20 +576,20 @@ public class Main {
                 .append("\n共有 ").append(mostPopularCount).append(" 个人提交本题\n");
 
         plainResult.append("\n新生训练题单完成比 Top 10：\n");
-        Pair<StringBuilder, List<SimpleRankItem>> top10 = generateRank(newbieTrainingData, 10, null, "%");
+        Pair<StringBuilder, List<SimpleRankItem>> top10 = generateRank(newbieTrainingData, 10, x -> !Global.config.excludeID().contains(x.user().id()), "%");
         plainResult.append(top10.A).append("\n");
 
         plainResult.append("昨日 OJ 总榜：")
                 .append("\n");
 
-        Pair<StringBuilder, List<SimpleRankItem>> fullRank = generateRank(deltaRankingData, Integer.MAX_VALUE, each -> each.id() >= 1014, "");
+        Pair<StringBuilder, List<SimpleRankItem>> fullRank = generateRank(deltaRankingData, Integer.MAX_VALUE, each -> each.id() >= 1014 && !Global.config.excludeID().contains(each.id()), "");
         plainResult.append(fullRank.A);
 
         plainResult.append("\n--------\n")
                 .append(String.format(Locale.ROOT, """
                         Generated by %s.
                         ©2023 Floating Ocean.
-                        At""", VersionControl.fetchVersionInfoInline(Main.class)))
+                        At""", Global.buildInfoInline))
                 .append(" ")
                 .append(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
 
@@ -607,19 +609,19 @@ public class Main {
     private static SubmissionPackHolder packSubmissionPackData(
             List<SubmissionData> submissionData,
             Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData,
-            Pair<Long, Pair<String, String>> firstACdata,
+            Pair<Long, Pair<UserData, String>> firstACdata,
             List<RankingData> deltaNewbie,
             StringBuilder plainResult
     ) {
 
-        Pair<StringBuilder, List<SimpleRankItem>> top5 = generateRank(deltaNewbie, 5, null, "");
+        Pair<StringBuilder, List<SimpleRankItem>> top5 = generateRank(deltaNewbie, 5, x -> !Global.config.excludeID().contains(x.id()), "");
         plainResult.append(top5.A).append("\n");
 
-        long submitUserAmount = submissionData.stream().map(SubmissionData::id).distinct().count();
+        long submitUserAmount = submissionData.stream().map(x -> x.user().id()).distinct().count();
         int submitCount = submissionData.size();
         double submitAve = verdictData.A.A, acProportion = verdictData.A.B;
 
-        String firstACWho = firstACdata == null ? "无人过题" : firstACdata.B.A;
+        String firstACWho = firstACdata == null ? "无人过题" : firstACdata.B.A.name();
         StringBuilder firstACInfo = new StringBuilder();
         if (firstACdata == null) firstACInfo.append("虽然但是，就是没有人过题啊！");
         else firstACInfo.append("在 ").append(new SimpleDateFormat("HH:mm:ss").format(new Date(firstACdata.A * 1000)))
@@ -648,7 +650,7 @@ public class Main {
     private static Pair<VerdictRankHolder, String> generateVerdictResult(
             VerdictType type,
             Pair<Pair<Integer, Integer>, List<SimpleRankableRecord>> verdictRank
-    ) throws Throwable {
+    ) {
 
         StringBuilder plainResult = new StringBuilder();
         plainResult.append("提交总数：\n").append(verdictRank.A.B).append("\n")
@@ -656,14 +658,14 @@ public class Main {
                 .append(String.format(Locale.ROOT, "%.2f", (double) verdictRank.A.A * 100 / verdictRank.A.B)).append("\n\n\n")
                 .append(type.getName()).append(" 排行榜 Top 10：\n");
 
-        Pair<StringBuilder, List<SimpleRankItem>> top10 = generateRank(verdictRank.B, 10, null, "");
+        Pair<StringBuilder, List<SimpleRankItem>> top10 = generateRank(verdictRank.B, 10, x -> !Global.config.excludeID().contains(x.user().id()), "");
         plainResult.append(top10.A).append("\n");
 
         plainResult.append("\n--------\n")
                 .append(String.format(Locale.ROOT, """
                         Generated by %s.
                         ©2023 Floating Ocean.
-                        At""", VersionControl.fetchVersionInfoInline(Main.class)))
+                        At""", Global.buildInfoInline))
                 .append(" ")
                 .append(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
 
@@ -719,10 +721,10 @@ public class Main {
             if (rank.get(each.fetchCount()) > limit) break;
             if (rated == null || rated.test(each)) currentRank ++; //判断是否不计入榜中
             plainResult.append(rated == null || rated.test(each) ? rank.get(each.fetchCount()) : "*")
-                    .append(". ").append(each.fetchName()).append(": ").append(each.fetchCount()).append(suffix);
+                    .append(". ").append(each.fetchWho().name()).append(": ").append(each.fetchCount()).append(suffix);
             visualResult.add(new SimpleRankItem(
                     rated == null || rated.test(each) ? String.valueOf(rank.get(each.fetchCount())) : "*",
-                    each.fetchName(), each.fetchCount()));
+                    each.fetchWho(), each.fetchCount()));
             if (i < rankData.size() - 1) plainResult.append("\n");
         }
         return Pair.of(plainResult, visualResult);

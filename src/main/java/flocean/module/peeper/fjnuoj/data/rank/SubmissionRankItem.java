@@ -1,6 +1,8 @@
 package flocean.module.peeper.fjnuoj.data.rank;
 
-public record SubmissionRankItem(String rank, String user, int count, int maxCount) implements VisualRankItem {
+import flocean.module.peeper.fjnuoj.data.UserData;
+
+public record SubmissionRankItem(String rank, UserData user, int count, int maxCount) implements VisualRankItem {
 
     public SubmissionRankItem(SimpleRankItem rankItem, int maxCount) {
         this(rankItem.rank(), rankItem.who(), rankItem.val(), maxCount);
@@ -12,8 +14,8 @@ public record SubmissionRankItem(String rank, String user, int count, int maxCou
     }
 
     @Override
-    public String fetchWho() {
-        return user().split(" \\(")[0];
+    public UserData fetchWho() {
+        return new UserData(user().name().split(" \\(")[0], user().id());
     }
 
     @Override
