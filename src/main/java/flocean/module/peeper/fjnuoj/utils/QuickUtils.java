@@ -6,9 +6,9 @@ import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONWriter;
 import flocean.module.peeper.fjnuoj.Main;
 import flocean.module.peeper.fjnuoj.config.Global;
-import flocean.module.peeper.fjnuoj.data.RankingData;
 import flocean.module.peeper.fjnuoj.lang.RunModuleException;
 import org.jsoup.Connection;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -135,6 +135,34 @@ public class QuickUtils {
         JSONObject json = JSON.parseObject(document.body().text());
         if(json.getInteger("code") != 200) throw new RunModuleException("Http response code" + json.getInteger("code"));
         return json.getJSONObject("data").getString("name");
+    }
+
+    public static int checkAlive(String checkUrl) throws Throwable{
+        try {
+            String url = "https://api.uptimerobot.com/v2/getMonitors";
+            Document document = Jsoup.connect(url)
+                    .requestBody("{\"api_key\":\"" + Global.config.uptime_apikey() + "\"}")
+                    .header("Content-Type", "application/json")
+                    .ignoreContentType(true)
+                    .post();
+            JSONObject json = JSON.parseObject(document.body().text());
+            if (!json.getString("stat").equals("ok")) {
+                return -1; //api寄了
+            }
+            JSONArray monitors = json.getJSONArray("monitors");
+            JSONObject ojMonitor = null;
+            for (int i = 0; i < monitors.size(); i++) {
+                JSONObject currentMonitor = monitors.getJSONObject(i);
+                if (currentMonitor.getString("url").equals(checkUrl)) {
+                    ojMonitor = currentMonitor;
+                    break;
+                }
+            }
+            if (ojMonitor == null) return -1;
+            return ojMonitor.getIntValue("status") == 2 ? 1 : 0;
+        }catch(HttpStatusException exception){
+            return -1;
+        }
     }
 
 }

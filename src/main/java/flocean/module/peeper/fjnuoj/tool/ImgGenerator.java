@@ -174,13 +174,15 @@ public class ImgGenerator {
         StyledString subtitle = packString(new SimpleDateFormat("yyyy.MM.dd").format(new Date())
                 + "  FJNUACM Online Judge Rank List", "H", 36);
 
-        StyledString top5Subtitle = packString("过题数榜单", "B", 36);
-        StyledString top5Title = packString("今日过题数", "H", 72);
-        StyledString top5Mark = packString("Top 5th", "H", 48);
-        List<RankDrawHolder> top5Who = new ArrayList<>();
-        for(var each : nowRankHolder.top5()){
-            SubmissionRankItem currentRankItem = new SubmissionRankItem(each, nowRankHolder.top5().get(0).val());
-            top5Who.add(new RankDrawHolder(currentRankItem.getProgress(), !currentRankItem.fetchRank().equals("*"),
+        StyledString topsSubtitle = packString("过题数榜单", "B", 36);
+        StyledString topsTitle = packString("今日过题数", "H", 72);
+        StyledString topsMark = packString(
+                nowRankHolder.topCount < Integer.MAX_VALUE ? "Top " + nowRankHolder.topCount + "th" : "Full",
+                "H", 48);
+        List<RankDrawHolder> topsWho = new ArrayList<>();
+        for(var each : nowRankHolder.tops()){
+            SubmissionRankItem currentRankItem = new SubmissionRankItem(each, nowRankHolder.tops().get(0).val());
+            topsWho.add(new RankDrawHolder(currentRankItem.getProgress(), !currentRankItem.fetchRank().equals("*"),
                     packString(currentRankItem.fetchRank(), "H", 64),
                     packString(currentRankItem.fetchWho().name(), "B", 36),
                     packString(currentRankItem.fetchVal(), "H", 36)));
@@ -225,22 +227,22 @@ public class ImgGenerator {
 
         int totalHeight = calculateHeight(
                 title, subtitle,
-                top5Subtitle, top5Title,
+                topsSubtitle, topsTitle,
                 submitCountTitle, submitCountHow, submitDetailWhat,
                 firstACTitle, firstACWho, firstACWhat,
                 top52Subtitle, top52Title,
                 copyright) +
-                calculateHeight(top5Who, top52Who) + 736;
+                calculateHeight(topsWho, top52Who) + 736;
 
         BufferedImage outputImg = new BufferedImage(1280, totalHeight + 300, BufferedImage.TYPE_INT_BGR);
         AtomicInteger currentY = new AtomicInteger(134);
         Graphics2D outputCanvas = drawBasicContent(outputImg, totalHeight, title, subtitle, currentY);
 
-        drawText(outputCanvas, top5Subtitle, 8, currentY);
-        drawText(outputCanvas, top5Title, 32, currentY);
+        drawText(outputCanvas, topsSubtitle, 8, currentY);
+        drawText(outputCanvas, topsTitle, 32, currentY);
         currentY.addAndGet(-96);
-        drawText(outputCanvas, top5Mark, 128 + ImgConvert.calculateStringWidth(top5Title.font, top5Title.content) + 28, 32, currentY);
-        drawRankText(outputCanvas, top5Who, 108, currentY);
+        drawText(outputCanvas, topsMark, 128 + ImgConvert.calculateStringWidth(topsTitle.font, topsTitle.content) + 28, 32, currentY);
+        drawRankText(outputCanvas, topsWho, 108, currentY);
 
         drawSubmitDetail(currentY, outputCanvas,
                 submitCountTitle, submitCountHow, submitAveTitle, submitAveHowMain, submitAveHowSub,
@@ -569,19 +571,19 @@ public class ImgGenerator {
                                  List<SimpleRankItem> top10, List<SimpleRankItem> fullRank) {
 
         public FullRankHolder(String top1, SubmissionPackHolder submissionData, String mostPopularProblem, int mostPopularCount, List<SimpleRankItem> top10, List<SimpleRankItem> fullRank) {
-            this(top1, submissionData.top5, submissionData.submitUserAmount, submissionData.submitCount, submissionData.submitAve, submissionData.acProportion, submissionData.submitDetail, submissionData.firstACName, submissionData.firstACInfo, mostPopularProblem, mostPopularCount, top10, fullRank);
+            this(top1, submissionData.tops, submissionData.submitUserAmount, submissionData.submitCount, submissionData.submitAve, submissionData.acProportion, submissionData.submitDetail, submissionData.firstACName, submissionData.firstACInfo, mostPopularProblem, mostPopularCount, top10, fullRank);
         }
     }
 
-    public record NowRankHolder(List<SimpleRankItem> top5, List<SimpleRankItem> top52, long submitUserAmount, int submitCount, double submitAve, double acProportion, String submitDetail,
-                                String firstACName, String firstACInfo) {
+    public record NowRankHolder(List<SimpleRankItem> tops, List<SimpleRankItem> top52, long submitUserAmount, int submitCount, double submitAve, double acProportion, String submitDetail,
+                                String firstACName, String firstACInfo, int topCount) {
         public NowRankHolder(List<SimpleRankItem> top52, SubmissionPackHolder submissionData) {
-            this(submissionData.top5, top52, submissionData.submitUserAmount, submissionData.submitCount, submissionData.submitAve, submissionData.acProportion, submissionData.submitDetail, submissionData.firstACName, submissionData.firstACInfo);
+            this(submissionData.tops, top52, submissionData.submitUserAmount, submissionData.submitCount, submissionData.submitAve, submissionData.acProportion, submissionData.submitDetail, submissionData.firstACName, submissionData.firstACInfo, submissionData.topCount);
         }
     }
 
-    public record SubmissionPackHolder(List<SimpleRankItem> top5, long submitUserAmount, int submitCount, double submitAve, double acProportion, String submitDetail,
-                                       String firstACName, String firstACInfo) {
+    public record SubmissionPackHolder(List<SimpleRankItem> tops, long submitUserAmount, int submitCount, double submitAve, double acProportion, String submitDetail,
+                                       String firstACName, String firstACInfo, int topCount) {
     }
 
     public record VerdictRankHolder(VerdictType verdict, List<SimpleRankItem> top10, int submitCount, double proportion) {

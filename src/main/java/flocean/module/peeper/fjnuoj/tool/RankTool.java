@@ -1,8 +1,5 @@
 package flocean.module.peeper.fjnuoj.tool;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONWriter;
 import flocean.module.peeper.fjnuoj.config.Global;
 import flocean.module.peeper.fjnuoj.data.DailyRankData;
 import flocean.module.peeper.fjnuoj.data.RankingData;
@@ -11,14 +8,9 @@ import flocean.module.peeper.fjnuoj.utils.QuickUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.nio.file.Files;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class RankTool {
 
@@ -30,18 +22,22 @@ public class RankTool {
      */
     public static List<RankingData> fetchData() throws Throwable {
         List<RankingData> rankingDataList = new ArrayList<>();
-        for (int i = 1; i <= 4; i++) {
-            final String url = Global.config.ojUrl() + "ranking?page=" + i;
+        Map<Integer, Boolean> uid = new HashMap<>(); //做一个uid重复的排除 (cookie 拥有者会一直出现在每页的顶部)
+        int i = 1;
+        while(true) {
+            final String url = Global.config.ojUrl() + "ranking?page=" + (i ++);
             Document document = QuickUtils.wrapWithCookie(Jsoup.connect(url)).get();
-            Element data = document.getElementsByClass("data-table").get(0)
-                    .getElementsByTag("tbody").get(0);
+            Elements dataContainer = document.getElementsByClass("data-table");
+            if(dataContainer.isEmpty()) break;
+            Element data = dataContainer.get(0).getElementsByTag("tbody").get(0);
             for (var each : data.getElementsByTag("tr")) {
                 String userName = each.getElementsByClass("user-profile-name").get(0).text();
                 String[] userIdData = each.getElementsByClass("user-profile-name").get(0).attr("href").split("/");
                 int userId = Integer.parseInt(userIdData[userIdData.length - 1]);
                 int acCount = Integer.parseInt(each.getElementsByClass("col--ac").get(0).text());
                 String rank = each.getElementsByClass("col--rank").get(0).text();
-                if (rank.equals("-")) continue;
+                if (rank.equals("-") || uid.containsKey(userId)) continue;
+                uid.put(userId, true);
                 rankingDataList.add(new RankingData(userName, acCount, userId, Integer.parseInt(rank)));
             }
         }

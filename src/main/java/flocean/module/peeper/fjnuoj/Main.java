@@ -44,9 +44,12 @@ public class Main {
                 } else if (args.length == 2 && args[0].equals("/version")) {
                     System.out.println(Global.buildInfo);
                     saveTextLocally(Global.buildInfo, args[1]);
-                } else if (args.length == 1 && args[0].equals("/update")) generateCompletely(null, null);
-                else if (args.length == 3 && args[0].equals("/full")) generateCompletely(args[1], args[2]);
-                else if (args.length == 3 && args[0].equals("/now")) generateTemporarily(args[1], args[2]);
+                } else if (args.length == 2 && args[0].equals("/alive")) {
+                    checkAlive(args[1]);
+                } else if (args.length == 1 && args[0].equals("/update")) generateFullRank(null, null);
+                else if (args.length == 3 && args[0].equals("/full")) generateFullRank(args[1], args[2]);
+                else if (args.length == 3 && args[0].equals("/now")) generateNowRank(false, args[1], args[2]);
+                else if (args.length == 4 && args[0].equals("/now")) generateNowRank(args[1].equals("full"), args[2], args[3]);
                 else if (args.length == 4 && args[0].equals("/verdict")) generateVerdict(args[1], args[2], args[3]);
                 else if (args.length == 4 && args[0].equals("/user")) {
                     if (args[1].equals("id")) generateUserInfo(Integer.parseInt(args[2]), args[3]);
@@ -75,6 +78,31 @@ public class Main {
                 For debug, input /version to get version info, input /necessity to check if we need to regenerate daily rank list.
                 """);
         throw new RunModuleException("input parameter invalid.");
+    }
+
+
+    private static void checkAlive(String plainPath) throws Throwable{
+        int[] status = {
+                QuickUtils.checkAlive("https://fjnuacm.top"),
+                QuickUtils.checkAlive("https://codeforces.com"),
+                QuickUtils.checkAlive("https://atcoder.jp")
+        };
+        StringBuilder plainResult = new StringBuilder();
+        if(status[0] == -1 || status[1] == -1 || status[2] == -1) plainResult.append("Api 调用异常");
+        else if(status[0] * status[1] * status[2] == 1) plainResult.append("所有服务均正常");
+        else plainResult.append("部分服务存在异常");
+        plainResult.append("\n");
+        String[] tags = {"Fjnuacm OJ", "Codeforces", "AtCoder"};
+        for(int i = 0; i < 3; i ++){
+            plainResult.append("\n");
+            plainResult.append("[").append(tags[i]).append("] ");
+            if(status[i] == -1) plainResult.append("Api 异常");
+            else if(status[i] == 1) plainResult.append("正常");
+            else plainResult.append("异常");
+        }
+        saveTextLocally(plainResult.toString(), plainPath);
+
+        System.out.println(plainResult);
     }
 
 
@@ -199,7 +227,7 @@ public class Main {
         Pair<Pair<Integer, Integer>, List<SimpleRankableRecord>> verdictRank = SubmissionTool.fetchVerdictRank(submissionData, verdictType);
         System.out.println("， 完成");
 
-        //Step4. 生成结果
+        //Step3. 生成结果
         System.out.println("\n正在生成结果\n\n");
         Pair<VerdictRankHolder, String> result = generateVerdictResult(verdictType, verdictRank);
 
@@ -217,7 +245,7 @@ public class Main {
      * @param plainPath 以文本格式输出的路径
      * @throws Throwable 异常信息
      */
-    private static void generateTemporarily(String imgPath, String plainPath) throws Throwable {
+    private static void generateNowRank(boolean needFull, String imgPath, String plainPath) throws Throwable {
         //Step1. 刷新RP
         callReloadRP();
 
@@ -234,7 +262,7 @@ public class Main {
         List<RankingData> deltaRankingData = dealRankingData(rankingDataList, yesterdayData);
         System.out.println("， 完成");
 
-        //Step3. 爬取昨天所有提交记录
+        //Step3. 爬取今天所有提交记录
         System.out.println("\n正在爬取今天的所有提交记录");
         List<SubmissionData> submissionData = SubmissionTool.fetchData(false);
         System.out.println("爬取完成，正在处理提交数据");
@@ -247,14 +275,14 @@ public class Main {
         Pair<Long, Pair<UserData, String>> firstACData = SubmissionTool.getFirstACAttempt(submissionData);
         System.out.println("， 完成");
 
-        //Step3. 爬取训练数据
+        //Step4. 爬取训练数据
         System.out.println("\n正在爬取新生前10名的训练数据");
         List<TrainingData> newbieTrainingData = dealTrainingData(rankingDataList, 10);
         System.out.println("完成");
 
-        //Step4. 生成结果
+        //Step5. 生成结果
         System.out.println("\n正在生成结果\n\n");
-        Pair<NowRankHolder, String> result = packNowResult(deltaRankingData, submissionData, verdictData, firstACData, newbieTrainingData);
+        Pair<NowRankHolder, String> result = packNowResult(deltaRankingData, submissionData, verdictData, firstACData, newbieTrainingData, needFull);
         ImgGenerator.generateNowRankImg(result.A, imgPath);
         saveTextLocally(result.B, plainPath);
 
@@ -269,12 +297,12 @@ public class Main {
      * @param plainPath 以文本格式输出的路径
      * @throws Throwable 异常信息
      */
-    private static void generateCompletely(String imgPath, String plainPath) throws Throwable {
+    private static void generateFullRank(String imgPath, String plainPath) throws Throwable {
         DailyRankData result = RankTool.fetchDailyRankData();
 
         if(result != null){
             System.out.println("重复生成榜单，将不再爬取");
-        }else {
+        } else {
             //Step1. 刷新RP
             callReloadRP();
 
@@ -514,14 +542,15 @@ public class Main {
             List<SubmissionData> submissionData,
             Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData,
             Pair<Long, Pair<UserData, String>> firstACdata,
-            List<TrainingData> newbieTrainingData
+            List<TrainingData> newbieTrainingData,
+            boolean needFull
     ) {
 
         StringBuilder plainResult = new StringBuilder();
         plainResult.append("今日当前题数榜单：\n\n");
 
-        plainResult.append("今日过题数 Top 5：\n");
-        SubmissionPackHolder submissionPackHolder = packSubmissionPackData(submissionData, verdictData, firstACdata, deltaRankingData, plainResult);
+        plainResult.append("今日过题数 ").append(needFull ? "Full" : "Top 5").append("：\n");
+        SubmissionPackHolder submissionPackHolder = packSubmissionPackData(submissionData, verdictData, firstACdata, deltaRankingData, plainResult, needFull ? Integer.MAX_VALUE : 5);
 
         plainResult.append("\n新生训练题单完成比 Top 5：\n");
         Pair<StringBuilder, List<SimpleRankItem>> top52 = generateRank(newbieTrainingData, 5, x -> !Global.config.excludeID().contains(x.user().id()), "%");
@@ -569,7 +598,7 @@ public class Main {
         List<RankingData> deltaNewbie = deltaRankingData.stream().filter(x -> x.id() >= 1014).toList();
 
         plainResult.append("\n\n昨日过题数 Top 5：\n");
-        SubmissionPackHolder submissionPackHolder = packSubmissionPackData(submissionData, verdictData, firstACdata, deltaNewbie, plainResult);
+        SubmissionPackHolder submissionPackHolder = packSubmissionPackData(submissionData, verdictData, firstACdata, deltaNewbie, plainResult, 5);
 
         String mostPopularProblem = mostPopular.name();
         int mostPopularCount = mostPopular.count();
@@ -612,11 +641,12 @@ public class Main {
             Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData,
             Pair<Long, Pair<UserData, String>> firstACdata,
             List<RankingData> deltaNewbie,
-            StringBuilder plainResult
+            StringBuilder plainResult,
+            int topCount
     ) {
 
-        Pair<StringBuilder, List<SimpleRankItem>> top5 = generateRank(deltaNewbie, 5, x -> !Global.config.excludeID().contains(x.id()), "");
-        plainResult.append(top5.A).append("\n");
+        Pair<StringBuilder, List<SimpleRankItem>> tops = generateRank(deltaNewbie, topCount, x -> !Global.config.excludeID().contains(x.id()), "");
+        plainResult.append(tops.A).append("\n");
 
         long submitUserAmount = submissionData.stream().map(x -> x.user().id()).distinct().count();
         int submitCount = submissionData.size();
@@ -637,7 +667,7 @@ public class Main {
         StringBuilder submitDetail = generateSubmitDetail(verdictData);
         plainResult.append("共收到 ").append(submitUserAmount).append(" 个人的提交，其中包含 ")
                 .append(submitDetail).append("\n");
-        return new SubmissionPackHolder(top5.B, submitUserAmount, submitCount, submitAve, acProportion, submitDetail.toString(), firstACWho, firstACInfo.toString());
+        return new SubmissionPackHolder(tops.B, submitUserAmount, submitCount, submitAve, acProportion, submitDetail.toString(), firstACWho, firstACInfo.toString(), topCount);
     }
 
 
