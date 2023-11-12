@@ -6,8 +6,7 @@ public enum VerdictType {
     COMPILE_ERROR("Compile Error", "CE"),
     TIME_LIMIT_EXCEED("Time Exceeded", "TLE"),
     MEMORY_LIMIT_EXCEED("Memory Exceeded", "MLE"),
-    RUNTIME_ERROR("Runtime Error", "RE")
-    ;
+    RUNTIME_ERROR("Runtime Error", "RE");
 
     private final String name;
     private final String alias;

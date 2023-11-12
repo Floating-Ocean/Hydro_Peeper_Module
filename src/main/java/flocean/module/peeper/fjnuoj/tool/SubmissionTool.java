@@ -81,7 +81,7 @@ public class SubmissionTool {
      * 分类提交信息，得到分小时评测榜单
      *
      * @param submissionDataList 总提交信息
-     * @param isYesterday 是否是昨天的数据
+     * @param isYesterday        是否是昨天的数据
      * @return 分小时评测榜单 <每小时的提交量, 每小时的通过率>
      */
     public static List<Pair<Integer, Integer>> classifyHourly(List<SubmissionData> submissionDataList, boolean isYesterday) {
@@ -92,15 +92,15 @@ public class SubmissionTool {
         Pair<Integer, Integer> currentData = Pair.of(0, 0);
         submissionDataList.stream().sorted(Comparator.comparingLong(SubmissionData::at)).forEach(each -> {
             long endTime = startTime.get() + 3600; //按 [startTime, endTime) 分段，每段3600秒
-            if(each.at() >= endTime){
+            if (each.at() >= endTime) {
                 hourlyData.add(Pair.copy(currentData));
                 currentData.A = 0;
                 currentData.B = 0;
                 startTime.set(endTime);
-            }else{
-                currentData.A ++;
-                if(each.verdictType() == VerdictType.ACCEPTED) {
-                    currentData.B ++;
+            } else {
+                currentData.A++;
+                if (each.verdictType() == VerdictType.ACCEPTED) {
+                    currentData.B++;
                 }
             }
         });
@@ -127,7 +127,7 @@ public class SubmissionTool {
             int pre = verdicts.getOrDefault(each.verdictType(), 0);
             verdicts.put(each.verdictType(), pre + 1);
             scoreSum += each.score();
-            if(each.verdictType() == VerdictType.ACCEPTED) acSum ++;
+            if (each.verdictType() == VerdictType.ACCEPTED) acSum++;
         }
         return Pair.of(Pair.of((double) scoreSum / submissionDataList.size(), (double) acSum * 100 / submissionDataList.size()), verdicts);
     }

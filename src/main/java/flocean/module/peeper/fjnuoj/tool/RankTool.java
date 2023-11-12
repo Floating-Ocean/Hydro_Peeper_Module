@@ -24,11 +24,11 @@ public class RankTool {
         List<RankingData> rankingDataList = new ArrayList<>();
         Map<Integer, Boolean> uid = new HashMap<>(); //做一个uid重复的排除 (cookie 拥有者会一直出现在每页的顶部)
         int i = 1;
-        while(true) {
-            final String url = Global.config.ojUrl() + "ranking?page=" + (i ++);
+        while (true) {
+            final String url = Global.config.ojUrl() + "ranking?page=" + (i++);
             Document document = QuickUtils.wrapWithCookie(Jsoup.connect(url)).get();
             Elements dataContainer = document.getElementsByClass("data-table");
-            if(dataContainer.isEmpty()) break;
+            if (dataContainer.isEmpty()) break;
             Element data = dataContainer.get(0).getElementsByTag("tbody").get(0);
             for (var each : data.getElementsByTag("tr")) {
                 String userName = each.getElementsByClass("user-profile-name").get(0).text();
@@ -71,6 +71,7 @@ public class RankTool {
 
     /**
      * 获取缓存的每日榜单数据
+     *
      * @return 缓存的每日榜单
      * @throws Throwable 异常信息
      */
@@ -79,7 +80,7 @@ public class RankTool {
             return QuickUtils.fetchJsonData(
                     QuickUtils.generateFileName("daily", new Date(System.currentTimeMillis()), "json"),
                     DailyRankData.class);
-        }catch(RunModuleException exception){
+        } catch (RunModuleException exception) {
             return null;
         }
     }

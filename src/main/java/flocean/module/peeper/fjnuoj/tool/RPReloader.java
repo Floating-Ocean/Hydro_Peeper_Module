@@ -37,12 +37,12 @@ public class RPReloader {
 
         String status = "Started";
         long startTime = System.currentTimeMillis(), lastQueryTime = 0;
-        while(!status.equals(VerdictType.ACCEPTED.getName())) {
+        while (!status.equals(VerdictType.ACCEPTED.getName())) {
             long nowTime = System.currentTimeMillis();
-            if(nowTime - startTime > 10 * 60 * 1000){ //保证只等待10秒
+            if (nowTime - startTime > 10 * 60 * 1000) { //保证只等待10秒
                 throw new RunModuleException("Refresh RP failed after 10s' wait.");
             }
-            if(nowTime - lastQueryTime < 1000) continue; //1秒检查一次
+            if (nowTime - lastQueryTime < 1000) continue; //1秒检查一次
             lastQueryTime = nowTime;
 
             final String runUrl = Global.config.ojUrl() + "record/" + ridValue;

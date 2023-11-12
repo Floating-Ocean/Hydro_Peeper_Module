@@ -31,7 +31,7 @@ public class ImgGenerator {
      * 生成每日榜单图片
      *
      * @param fullRankHolder 包装后的每日榜单数据
-     * @param path         输出路径
+     * @param path           输出路径
      * @throws Throwable 异常信息
      */
     public static void generateFullRankImg(FullRankHolder fullRankHolder, String path) throws Throwable {
@@ -46,7 +46,7 @@ public class ImgGenerator {
         StyledString top5Title = packString("昨日过题数", "H", 72);
         StyledString top5Mark = packString("Top 5th", "H", 48);
         List<RankDrawHolder> top5Who = new ArrayList<>();
-        for(var each : fullRankHolder.top5()){
+        for (var each : fullRankHolder.top5()) {
             SubmissionRankItem currentRankItem = new SubmissionRankItem(each, fullRankHolder.top5().get(0).val());
             top5Who.add(new RankDrawHolder(currentRankItem.getProgress(), !currentRankItem.fetchRank().equals("*"),
                     packString(currentRankItem.fetchRank(), "H", 64),
@@ -86,7 +86,7 @@ public class ImgGenerator {
         StyledString top10Title = packString("新生训练题单完成比", "H", 72);
         StyledString top10Mark = packString("Top 10th", "H", 48);
         List<RankDrawHolder> top10Who = new ArrayList<>();
-        for(var each : fullRankHolder.top10()){
+        for (var each : fullRankHolder.top10()) {
             TrainingRankItem currentRankItem = new TrainingRankItem(each);
             top10Who.add(new RankDrawHolder(currentRankItem.getProgress(), !currentRankItem.fetchRank().equals("*"),
                     packString(currentRankItem.fetchRank(), "H", 64),
@@ -97,7 +97,7 @@ public class ImgGenerator {
         StyledString fullRankSubtitle = packString("完整榜单", "B", 36);
         StyledString fullRankTitle = packString("昨日 OJ 总榜", "H", 72);
         List<RankDrawHolder> fullRankWho = new ArrayList<>();
-        for(var each : fullRankHolder.fullRank()){
+        for (var each : fullRankHolder.fullRank()) {
             SubmissionRankItem currentRankItem = new SubmissionRankItem(each, fullRankHolder.fullRank().get(0).val());
             fullRankWho.add(new RankDrawHolder(currentRankItem.getProgress(), !currentRankItem.fetchRank().equals("*"),
                     packString(currentRankItem.fetchRank(), "H", 64),
@@ -171,7 +171,7 @@ public class ImgGenerator {
      * 生成今日当前榜单图片
      *
      * @param nowRankHolder 包装后的今日当前榜单数据
-     * @param path        输出路径
+     * @param path          输出路径
      * @throws Throwable 异常信息
      */
     public static void generateNowRankImg(NowRankHolder nowRankHolder, String path) throws Throwable {
@@ -185,7 +185,7 @@ public class ImgGenerator {
                 nowRankHolder.topCount < Integer.MAX_VALUE ? "Top " + nowRankHolder.topCount + "th" : "Full",
                 "H", 48);
         List<RankDrawHolder> topsWho = new ArrayList<>();
-        for(var each : nowRankHolder.tops()){
+        for (var each : nowRankHolder.tops()) {
             SubmissionRankItem currentRankItem = new SubmissionRankItem(each, nowRankHolder.tops().get(0).val());
             topsWho.add(new RankDrawHolder(currentRankItem.getProgress(), !currentRankItem.fetchRank().equals("*"),
                     packString(currentRankItem.fetchRank(), "H", 64),
@@ -220,7 +220,7 @@ public class ImgGenerator {
         StyledString top52Title = packString("新生训练题单完成比", "H", 72);
         StyledString top52Mark = packString("Top 5th", "H", 48);
         List<RankDrawHolder> top52Who = new ArrayList<>();
-        for(var each : nowRankHolder.top52()){
+        for (var each : nowRankHolder.top52()) {
             TrainingRankItem currentRankItem = new TrainingRankItem(each);
             top52Who.add(new RankDrawHolder(currentRankItem.getProgress(), !currentRankItem.fetchRank().equals("*"),
                     packString(currentRankItem.fetchRank(), "H", 64),
@@ -277,7 +277,7 @@ public class ImgGenerator {
      * 生成分类型评测榜单图片
      *
      * @param verdictRankHolder 包装后的分类型评测榜单数据
-     * @param path            输出路径
+     * @param path              输出路径
      * @throws Throwable 异常信息
      */
     public static void generateVerdictRankImg(VerdictRankHolder verdictRankHolder, String path) throws Throwable {
@@ -295,7 +295,7 @@ public class ImgGenerator {
         StyledString top10Title = packString(verdictRankHolder.verdict.getAlias() + " 排行榜", "H", 72);
         StyledString top10Mark = packString("Top 10th", "H", 48);
         List<RankDrawHolder> top10Who = new ArrayList<>();
-        for(var each : verdictRankHolder.top10()){
+        for (var each : verdictRankHolder.top10()) {
             SubmissionRankItem currentRankItem = new SubmissionRankItem(each, verdictRankHolder.top10().get(0).val());
             top10Who.add(new RankDrawHolder(currentRankItem.getProgress(), !currentRankItem.fetchRank().equals("*"),
                     packString(currentRankItem.fetchRank(), "H", 64),
@@ -373,7 +373,7 @@ public class ImgGenerator {
     /**
      * 绘制提交信息
      *
-     * @param currentY 开始绘制文本的高度
+     * @param currentY     开始绘制文本的高度
      * @param outputCanvas 目标图层
      */
     private static void drawSubmitDetail(
@@ -438,12 +438,13 @@ public class ImgGenerator {
 
     /**
      * 绘制竖条形图
-     * @param outputCanvas 目标图层
-     * @param content 条形图数据
+     *
+     * @param outputCanvas  目标图层
+     * @param content       条形图数据
      * @param paddingBottom 下边距
-     * @param currentY 开始绘制的高度
+     * @param currentY      开始绘制的高度
      */
-    private static void drawVerticalGraph(Graphics2D outputCanvas, List<Pair<Double, Double>> content, int paddingBottom, AtomicInteger currentY){
+    private static void drawVerticalGraph(Graphics2D outputCanvas, List<Pair<Double, Double>> content, int paddingBottom, AtomicInteger currentY) {
         int currentX = 152;
         currentY.addAndGet(16);
 
@@ -454,9 +455,9 @@ public class ImgGenerator {
         outputCanvas.fillRect(128, currentY.get() + 240, 24, 4);
         outputCanvas.fillRect(128, currentY.get() + 220, 4, 20);
 
-        for(var each : content){
-            int progressLen = (int)(24 + 176 * each.A),
-                subProgressLen = each.A > 0 ? (int)(24 + 176 * each.A * each.B) : 24;
+        for (var each : content) {
+            int progressLen = (int) (24 + 176 * each.A),
+                    subProgressLen = each.A > 0 ? (int) (24 + 176 * each.A * each.B) : 24;
             AtomicInteger lineY = new AtomicInteger(currentY.get() + 24);
 
             outputCanvas.setColor(new Color(0, 0, 0, 32));
@@ -480,24 +481,26 @@ public class ImgGenerator {
 
     /**
      * 绘制排行榜
-     * @param outputCanvas 目标图层
-     * @param content 排行榜内容
+     *
+     * @param outputCanvas  目标图层
+     * @param content       排行榜内容
      * @param paddingBottom 下边距
-     * @param currentY 开始绘制文本的高度
+     * @param currentY      开始绘制文本的高度
      */
-    private static void drawRankText(Graphics2D outputCanvas, List<RankDrawHolder> content, int paddingBottom, AtomicInteger currentY){
+    private static void drawRankText(Graphics2D outputCanvas, List<RankDrawHolder> content, int paddingBottom, AtomicInteger currentY) {
         String preRank = ""; //上一个 rank
-        for(var each : content){
-            int progressLen = (int)(360 + 440 * each.percent);
+        for (var each : content) {
+            int progressLen = (int) (360 + 440 * each.percent);
 
             AtomicInteger lineY = new AtomicInteger(currentY.get());
             int currentX = 128 + 32;
-            if(each.rated){
+            boolean sameRank = false;
+            if (each.rated) {
+                sameRank = each.strings[0].content.equals(preRank);
                 //相同 rank 不重复显示，显示为透明
-                outputCanvas.setColor(new Color(0, 0, 0,
-                        each.strings[0].content.equals(preRank) ? 0 : 255));
+                outputCanvas.setColor(new Color(0, 0, 0, sameRank ? 0 : 255));
                 preRank = each.strings[0].content;
-            }else{
+            } else {
                 //打星显示为半透明
                 outputCanvas.setColor(new Color(0, 0, 0, 100));
             }
@@ -513,8 +516,10 @@ public class ImgGenerator {
             drawText(outputCanvas, each.strings[2], currentX, 32, currentY);
 
             LinearGradientPaint tilePaint = new LinearGradientPaint(0, 52, progressLen, 52, new float[]{0.0f, 0.5f, 1.0f},
-                    new Color[]{new Color(0, 0, 0, each.rated ? 14 : 10),
-                            new Color(0, 0, 0, each.rated ? 28 : 15), new Color(0, 0, 0, each.rated ? 32 : 18)});
+                    new Color[]{
+                            new Color(0, 0, 0, each.rated ? (sameRank ? 2 : 14) : 10),
+                            new Color(0, 0, 0, each.rated ? (sameRank ? 18 : 28) : 15),
+                            new Color(0, 0, 0, each.rated ? 32 : 18)});
             outputCanvas.setPaint(tilePaint);
             outputCanvas.fillRoundRect(128, lineY.get() + 50, progressLen, 52, 52, 52);
 
@@ -608,13 +613,14 @@ public class ImgGenerator {
 
     /**
      * 计算多个排行榜文本的总高度，以 32 像素为分隔
+     *
      * @param strings 排行榜文本
      * @return 总高
      */
     @SafeVarargs
     private static int calculateHeight(List<RankDrawHolder>... strings) {
         int height = 0;
-        for(var string : strings) {
+        for (var string : strings) {
             for (var each : string) height += each.strings[1].height + 40 + 32;
             height -= 32;
         }
@@ -637,16 +643,19 @@ public class ImgGenerator {
         ImageIO.write(img, "png", file);
     }
 
-    private record RankDrawHolder(double percent, boolean rated, StyledString... strings){
+    private record RankDrawHolder(double percent, boolean rated, StyledString... strings) {
     }
 
-    public record UserInfoHolder(UserInfoData userInfoData, int submitCount, double submitAve, double acProportion, String submitDetail,
+    public record UserInfoHolder(UserInfoData userInfoData, int submitCount, double submitAve, double acProportion,
+                                 String submitDetail,
                                  SubmissionData lastSubmit, int trainingProgress) {
     }
 
-    public record FullRankHolder(String top1, List<SimpleRankItem> top5, long submitUserAmount, int submitCount, double submitAve, double acProportion, String submitDetail,
+    public record FullRankHolder(String top1, List<SimpleRankItem> top5, long submitUserAmount, int submitCount,
+                                 double submitAve, double acProportion, String submitDetail,
                                  List<Pair<Double, Double>> hourlyInfoData, String hourlyInfoDetail,
-                                 String firstACName, String firstACInfo, String mostPopularProblem, int mostPopularCount,
+                                 String firstACName, String firstACInfo, String mostPopularProblem,
+                                 int mostPopularCount,
                                  List<SimpleRankItem> top10, List<SimpleRankItem> fullRank) {
 
         public FullRankHolder(String top1, SubmissionPackHolder submissionData, String mostPopularProblem, int mostPopularCount, List<SimpleRankItem> top10, List<SimpleRankItem> fullRank) {
@@ -654,7 +663,8 @@ public class ImgGenerator {
         }
     }
 
-    public record NowRankHolder(List<SimpleRankItem> tops, List<SimpleRankItem> top52, long submitUserAmount, int submitCount, double submitAve, double acProportion, String submitDetail,
+    public record NowRankHolder(List<SimpleRankItem> tops, List<SimpleRankItem> top52, long submitUserAmount,
+                                int submitCount, double submitAve, double acProportion, String submitDetail,
                                 List<Pair<Double, Double>> hourlyInfoData, String hourlyInfoDetail,
                                 String firstACName, String firstACInfo, int topCount) {
         public NowRankHolder(List<SimpleRankItem> top52, SubmissionPackHolder submissionData) {
@@ -662,12 +672,14 @@ public class ImgGenerator {
         }
     }
 
-    public record SubmissionPackHolder(List<SimpleRankItem> tops, long submitUserAmount, int submitCount, double submitAve, double acProportion, String submitDetail,
+    public record SubmissionPackHolder(List<SimpleRankItem> tops, long submitUserAmount, int submitCount,
+                                       double submitAve, double acProportion, String submitDetail,
                                        List<Pair<Double, Double>> hourlyInfoData, String hourlyInfoDetail,
                                        String firstACName, String firstACInfo, int topCount) {
     }
 
-    public record VerdictRankHolder(VerdictType verdict, List<SimpleRankItem> top10, int submitCount, double proportion) {
+    public record VerdictRankHolder(VerdictType verdict, List<SimpleRankItem> top10, int submitCount,
+                                    double proportion) {
     }
 
 }

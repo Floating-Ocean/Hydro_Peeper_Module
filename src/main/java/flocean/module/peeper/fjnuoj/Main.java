@@ -82,6 +82,7 @@ public class Main {
 
     /**
      * 检查 Online Judge 是否存活
+     *
      * @param plainPath 输出路径
      * @throws Throwable 异常信息
      */
@@ -470,10 +471,11 @@ public class Main {
 
     /**
      * 处理并包装用户数据
-     * @param userInfoData 用户数据
+     *
+     * @param userInfoData          用户数据
      * @param currentSubmissionData 当前提交数据
-     * @param verdictData 当前评测数据
-     * @param trainingProgress 当前用户的训练题单完成度
+     * @param verdictData           当前评测数据
+     * @param trainingProgress      当前用户的训练题单完成度
      * @return 处理完成后的用户信息
      */
     private static Pair<UserInfoHolder, String> packUserInfo(
@@ -679,7 +681,8 @@ public class Main {
 
     /**
      * 处理并包装每小时的数据
-     * @param hourlyData 每小时的源数据 <每小时总提交量, 每小时总Ac量>
+     *
+     * @param hourlyData  每小时的源数据 <每小时总提交量, 每小时总Ac量>
      * @param plainResult 目标文本输出
      * @return 处理结束后的每小时数据 <<每小时提交量对最大提交量的占比, 每小时的Ac占比>, 文本结果>
      */
@@ -688,15 +691,15 @@ public class Main {
         StringBuilder hourlyInfoDetail = new StringBuilder();
         int maxTime = 0;
         double maxTimeAc = 0;
-        for(int i = 0; i < 24; i ++){
+        for (int i = 0; i < 24; i++) {
             Pair<Double, Double> each = hourlyInfoData.A.get(i);
-            if(each.A == 0) continue;
+            if (each.A == 0) continue;
             plainResult.append(String.format(Locale.ROOT, "%02d", i)).append(": ")
                     .append(String.format(Locale.ROOT, "%.2f", each.A * 100))
                     .append("% Top, ")
                     .append(String.format(Locale.ROOT, "%.2f", each.B * 100))
                     .append("% Ac.\n");
-            if(each.A == 1){
+            if (each.A == 1) {
                 maxTime = i;
                 maxTimeAc = Math.max(maxTimeAc, each.B);
             }
@@ -804,10 +807,11 @@ public class Main {
 
     /**
      * 将每小时详细数据转化为比例数据
+     *
      * @param hourlyData 每小时详细数据 <每小时总提交量, 每小时总Ac量>
      * @return <<每小时提交量对最大提交量的占比, 每小时的Ac占比>, 最多提交数量>
      */
-    private static Pair<List<Pair<Double, Double>>, Integer> generateHourlyInfoData(List<Pair<Integer, Integer>> hourlyData){
+    private static Pair<List<Pair<Double, Double>>, Integer> generateHourlyInfoData(List<Pair<Integer, Integer>> hourlyData) {
         int maxCount = hourlyData.stream().max(Comparator.comparingInt(o -> o.A))
                 .orElse(Pair.of(1, 0)).A;
         List<Pair<Double, Double>> hourlyInfoData = new ArrayList<>();
@@ -818,6 +822,7 @@ public class Main {
 
     /**
      * 将输出信息拼到结尾
+     *
      * @param plainResult 目标文本输出
      */
     private static void appendGenerationInfo(StringBuilder plainResult) {

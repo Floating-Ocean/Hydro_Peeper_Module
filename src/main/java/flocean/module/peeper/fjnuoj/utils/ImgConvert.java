@@ -107,11 +107,12 @@ public class ImgConvert {
 
     /**
      * 给图片应用覆盖色
+     *
      * @param image 图片
-     * @param tint 覆盖色
+     * @param tint  覆盖色
      * @return 处理完后的图片
      */
-    public static Image applyTint(Image image, Color tint){
+    public static Image applyTint(Image image, Color tint) {
         ImageFilter filter = new RGBImageFilter() {
             @Override
             public int filterRGB(int x, int y, int rgb) {

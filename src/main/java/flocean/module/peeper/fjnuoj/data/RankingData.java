@@ -11,7 +11,7 @@ public record RankingData(String user, int ac, int id, int rank) implements Rank
         return ac();
     }
 
-    public UserData packUser(){
+    public UserData packUser() {
         return new UserData(user, id);
     }
 }

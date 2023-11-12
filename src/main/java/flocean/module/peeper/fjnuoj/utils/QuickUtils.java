@@ -26,6 +26,7 @@ public class QuickUtils {
 
     /**
      * 获取当前 jar 包工作路径，即 java -jar 工作路径/xxx.jar
+     *
      * @return 路径
      */
     public static String getModulePath() {
@@ -37,18 +38,20 @@ public class QuickUtils {
 
     /**
      * 根据名称读取 jar 中的图片
+     *
      * @param name 名称
      * @return 对应的图片
      * @throws Throwable 异常信息
      */
     public static Image getImageByName(String name) throws Throwable {
         URL imgURL = Main.class.getResource("/img/" + name + ".png");
-        if(imgURL == null) throw new RunModuleException("resource not found");
+        if (imgURL == null) throw new RunModuleException("resource not found");
         return ImageIO.read(imgURL);
     }
 
     /**
      * 将 Jsoup 的连接附带上 Cookie
+     *
      * @param connection 需要附带 Cookie 的连接
      * @return 操作之后的连接
      */
@@ -111,7 +114,7 @@ public class QuickUtils {
     /**
      * 以 json 格式保存数据，出现源文件存在时默认不覆盖文件
      *
-     * @param data 需要保存的数据
+     * @param data   需要保存的数据
      * @param prefix 文件前缀
      * @throws Throwable 异常信息
      */
@@ -122,9 +125,9 @@ public class QuickUtils {
     /**
      * 以 json 格式保存数据
      *
-     * @param data 需要保存的数据
+     * @param data   需要保存的数据
      * @param prefix 文件前缀
-     * @param force 源文件存在时是否覆盖
+     * @param force  源文件存在时是否覆盖
      * @throws Throwable 异常信息
      */
     public static void saveJsonData(Object data, String prefix, boolean force) throws Throwable {
@@ -139,10 +142,11 @@ public class QuickUtils {
 
     /**
      * 读取 Json Array
-     * @param name 文件名
+     *
+     * @param name   文件名
      * @param tClass 目标 Array 的 Class
+     * @param <T>    目标 Array 的类型
      * @return 目标 Array
-     * @param <T> 目标 Array 的类型
      * @throws Throwable 异常信息
      */
     public static <T> List<T> fetchJsonArrayData(String name, Class<T> tClass) throws Throwable {
@@ -155,10 +159,11 @@ public class QuickUtils {
 
     /**
      * 读取 Json Object
-     * @param name 文件名
+     *
+     * @param name   文件名
      * @param tClass 目标 Object 的 Class
+     * @param <T>    目标 Object 的类型
      * @return 目标 Object
-     * @param <T> 目标 Object 的类型
      * @throws Throwable 异常信息
      */
     public static <T> T fetchJsonData(String name, Class<T> tClass) throws Throwable {
@@ -171,25 +176,28 @@ public class QuickUtils {
 
     /**
      * 调用 api 读取 qq名
+     *
      * @param id qq号
      * @return qq名
      * @throws Throwable 异常信息
      */
-    public static String getQQName(String id) throws Throwable{
+    public static String getQQName(String id) throws Throwable {
         String url = "https://api.usuuu.com/qq/" + id;
         Document document = Jsoup.connect(url).ignoreContentType(true).get();
         JSONObject json = JSON.parseObject(document.body().text());
-        if(json.getInteger("code") != 200) throw new RunModuleException("Http response code" + json.getInteger("code"));
+        if (json.getInteger("code") != 200)
+            throw new RunModuleException("Http response code" + json.getInteger("code"));
         return json.getJSONObject("data").getString("name");
     }
 
     /**
      * 调用 api 检查指定 url 的连通性
+     *
      * @param checkUrl 需要检查的 url
      * @return 连通状态. -1: api异常, 0: 活着, 1: 寄了
      * @throws Throwable 异常信息
      */
-    public static int checkAlive(String checkUrl) throws Throwable{
+    public static int checkAlive(String checkUrl) throws Throwable {
         try {
             String url = "https://api.uptimerobot.com/v2/getMonitors";
             Document document = Jsoup.connect(url)
@@ -212,7 +220,7 @@ public class QuickUtils {
             }
             if (ojMonitor == null) return -1;
             return ojMonitor.getIntValue("status") == 2 ? 1 : 0;
-        }catch(HttpStatusException exception){
+        } catch (HttpStatusException exception) {
             return -1;
         }
     }

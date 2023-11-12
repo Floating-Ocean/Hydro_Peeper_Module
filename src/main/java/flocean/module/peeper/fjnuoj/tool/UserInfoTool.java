@@ -51,9 +51,9 @@ public class UserInfoTool {
             }
         }
         //通过邮箱解析qq
-        if (qq.equals("unknown") && mail.contains("@qq.com")){
+        if (qq.equals("unknown") && mail.contains("@qq.com")) {
             String possiblyQQ = mail.replace("@qq.com", "");
-            if(possiblyQQ.chars().allMatch(Character::isDigit)) qq = possiblyQQ;
+            if (possiblyQQ.chars().allMatch(Character::isDigit)) qq = possiblyQQ;
         }
         StringBuilder description = new StringBuilder();
         for (var each : personalDescription.getElementsByTag("p")) {
@@ -62,7 +62,7 @@ public class UserInfoTool {
         }
 
         String qqName = null;
-        if(!qq.equals("unknown")) qqName = QuickUtils.getQQName(qq);
+        if (!qq.equals("unknown")) qqName = QuickUtils.getQQName(qq);
 
         return new UserInfoData(userName, userStatus, userProgress, mail, qq, qqName, description.toString());
     }
