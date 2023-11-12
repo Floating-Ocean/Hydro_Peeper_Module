@@ -15,6 +15,10 @@ public class Pair<A, B> {
         return new Pair<>(A, B);
     }
 
+    public static <A, B> Pair<A, B> copy(Pair<A, B> old) {
+        return new Pair<>(old.A, old.B);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

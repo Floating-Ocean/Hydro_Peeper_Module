@@ -14,6 +14,13 @@ import java.util.regex.Pattern;
 
 public class UserInfoTool {
 
+    /**
+     * 爬取用户数据
+     *
+     * @param uid 指定用户的 uid
+     * @return 用户数据
+     * @throws Throwable 异常信息
+     */
     public static UserInfoData fetchData(int uid) throws Throwable {
         final String url = Global.config.ojUrl() + "user/" + uid;
         Document document = QuickUtils.wrapWithCookie(Jsoup.connect(url)).get();

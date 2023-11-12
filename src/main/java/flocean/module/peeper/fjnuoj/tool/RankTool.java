@@ -69,6 +69,11 @@ public class RankTool {
     }
 
 
+    /**
+     * 获取缓存的每日榜单数据
+     * @return 缓存的每日榜单
+     * @throws Throwable 异常信息
+     */
     public static DailyRankData fetchDailyRankData() throws Throwable {
         try {
             return QuickUtils.fetchJsonData(

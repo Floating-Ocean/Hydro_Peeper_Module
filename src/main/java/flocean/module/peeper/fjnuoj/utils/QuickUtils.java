@@ -24,6 +24,10 @@ import java.util.List;
 
 public class QuickUtils {
 
+    /**
+     * 获取当前 jar 包工作路径，即 java -jar 工作路径/xxx.jar
+     * @return 路径
+     */
     public static String getModulePath() {
         String path = System.getProperty("java.class.path");
         int pathBegin = path.lastIndexOf(System.getProperty("path.separator")) + 1;
@@ -31,12 +35,23 @@ public class QuickUtils {
         return path.substring(pathBegin, pathEnd);
     }
 
+    /**
+     * 根据名称读取 jar 中的图片
+     * @param name 名称
+     * @return 对应的图片
+     * @throws Throwable 异常信息
+     */
     public static Image getImageByName(String name) throws Throwable {
         URL imgURL = Main.class.getResource("/img/" + name + ".png");
         if(imgURL == null) throw new RunModuleException("resource not found");
         return ImageIO.read(imgURL);
     }
 
+    /**
+     * 将 Jsoup 的连接附带上 Cookie
+     * @param connection 需要附带 Cookie 的连接
+     * @return 操作之后的连接
+     */
     public static Connection wrapWithCookie(Connection connection) {
         return connection
                 .cookie("sid", Global.config.cookie().sid())
@@ -93,14 +108,23 @@ public class QuickUtils {
         return generateFileName("rank", date, suffix);
     }
 
+    /**
+     * 以 json 格式保存数据，出现源文件存在时默认不覆盖文件
+     *
+     * @param data 需要保存的数据
+     * @param prefix 文件前缀
+     * @throws Throwable 异常信息
+     */
     public static void saveJsonData(Object data, String prefix) throws Throwable {
         saveJsonData(data, prefix, false);
     }
 
     /**
-     * 以 json 格式保存今日凌晨排行榜数据
+     * 以 json 格式保存数据
      *
-     * @param data 包装后的排行榜数据
+     * @param data 需要保存的数据
+     * @param prefix 文件前缀
+     * @param force 源文件存在时是否覆盖
      * @throws Throwable 异常信息
      */
     public static void saveJsonData(Object data, String prefix, boolean force) throws Throwable {
@@ -113,6 +137,14 @@ public class QuickUtils {
         JSON.writeTo(new FileOutputStream(file), data, JSONWriter.Feature.PrettyFormat);
     }
 
+    /**
+     * 读取 Json Array
+     * @param name 文件名
+     * @param tClass 目标 Array 的 Class
+     * @return 目标 Array
+     * @param <T> 目标 Array 的类型
+     * @throws Throwable 异常信息
+     */
     public static <T> List<T> fetchJsonArrayData(String name, Class<T> tClass) throws Throwable {
         String path = Global.config.workPath() + "/data/" + name;
         File file = QuickUtils.fetchFile(path);
@@ -121,6 +153,14 @@ public class QuickUtils {
         return JSON.parseArray(result, tClass);
     }
 
+    /**
+     * 读取 Json Object
+     * @param name 文件名
+     * @param tClass 目标 Object 的 Class
+     * @return 目标 Object
+     * @param <T> 目标 Object 的类型
+     * @throws Throwable 异常信息
+     */
     public static <T> T fetchJsonData(String name, Class<T> tClass) throws Throwable {
         String path = Global.config.workPath() + "/data/" + name;
         File file = QuickUtils.fetchFile(path);
@@ -129,6 +169,12 @@ public class QuickUtils {
         return JSON.parseObject(result, tClass);
     }
 
+    /**
+     * 调用 api 读取 qq名
+     * @param id qq号
+     * @return qq名
+     * @throws Throwable 异常信息
+     */
     public static String getQQName(String id) throws Throwable{
         String url = "https://api.usuuu.com/qq/" + id;
         Document document = Jsoup.connect(url).ignoreContentType(true).get();
@@ -137,6 +183,12 @@ public class QuickUtils {
         return json.getJSONObject("data").getString("name");
     }
 
+    /**
+     * 调用 api 检查指定 url 的连通性
+     * @param checkUrl 需要检查的 url
+     * @return 连通状态. -1: api异常, 0: 活着, 1: 寄了
+     * @throws Throwable 异常信息
+     */
     public static int checkAlive(String checkUrl) throws Throwable{
         try {
             String url = "https://api.uptimerobot.com/v2/getMonitors";

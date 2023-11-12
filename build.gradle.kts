@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "flocean.module.peeper.fjnuoj"
-version = "3.3.2b2"
+version = "3.3.3"
 
 repositories {
     mavenCentral()

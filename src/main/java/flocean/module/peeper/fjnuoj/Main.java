@@ -17,7 +17,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
-import java.util.List;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -49,7 +48,8 @@ public class Main {
                 } else if (args.length == 1 && args[0].equals("/update")) generateFullRank(null, null);
                 else if (args.length == 3 && args[0].equals("/full")) generateFullRank(args[1], args[2]);
                 else if (args.length == 3 && args[0].equals("/now")) generateNowRank(false, args[1], args[2]);
-                else if (args.length == 4 && args[0].equals("/now")) generateNowRank(args[1].equals("full"), args[2], args[3]);
+                else if (args.length == 4 && args[0].equals("/now"))
+                    generateNowRank(args[1].equals("full"), args[2], args[3]);
                 else if (args.length == 4 && args[0].equals("/verdict")) generateVerdict(args[1], args[2], args[3]);
                 else if (args.length == 4 && args[0].equals("/user")) {
                     if (args[1].equals("id")) generateUserInfo(Integer.parseInt(args[2]), args[3]);
@@ -80,24 +80,28 @@ public class Main {
         throw new RunModuleException("input parameter invalid.");
     }
 
-
-    private static void checkAlive(String plainPath) throws Throwable{
+    /**
+     * 检查 Online Judge 是否存活
+     * @param plainPath 输出路径
+     * @throws Throwable 异常信息
+     */
+    private static void checkAlive(String plainPath) throws Throwable {
         int[] status = {
                 QuickUtils.checkAlive("https://fjnuacm.top"),
                 QuickUtils.checkAlive("https://codeforces.com"),
                 QuickUtils.checkAlive("https://atcoder.jp")
         };
         StringBuilder plainResult = new StringBuilder();
-        if(status[0] == -1 || status[1] == -1 || status[2] == -1) plainResult.append("Api 调用异常");
-        else if(status[0] * status[1] * status[2] == 1) plainResult.append("所有服务均正常");
+        if (status[0] == -1 || status[1] == -1 || status[2] == -1) plainResult.append("Api 调用异常");
+        else if (status[0] * status[1] * status[2] == 1) plainResult.append("所有服务均正常");
         else plainResult.append("部分服务存在异常");
         plainResult.append("\n");
         String[] tags = {"Fjnuacm OJ", "Codeforces", "AtCoder"};
-        for(int i = 0; i < 3; i ++){
+        for (int i = 0; i < 3; i++) {
             plainResult.append("\n");
             plainResult.append("[").append(tags[i]).append("] ");
-            if(status[i] == -1) plainResult.append("Api 异常");
-            else if(status[i] == 1) plainResult.append("正常");
+            if (status[i] == -1) plainResult.append("Api 异常");
+            else if (status[i] == 1) plainResult.append("正常");
             else plainResult.append("异常");
         }
         saveTextLocally(plainResult.toString(), plainPath);
@@ -111,14 +115,15 @@ public class Main {
      *
      * @return 必要性
      */
-    private static boolean checkNecessity() throws Throwable{
+    private static boolean checkNecessity() throws Throwable {
         return RankTool.fetchDailyRankData() == null;
     }
 
 
     /**
      * 对用户名进行模糊匹配
-     * @param userName 目标用户名
+     *
+     * @param userName  目标用户名
      * @param plainPath 输出路径
      * @throws Throwable 异常信息
      */
@@ -152,9 +157,9 @@ public class Main {
         matches.sort(Comparator.comparingDouble(o -> -o.B));
         System.out.println("， 完成");
 
-        if(matches.isEmpty()){
+        if (matches.isEmpty()) {
             saveTextLocally("mismatch", plainPath);
-        }else {
+        } else {
             JSON.writeTo(new FileOutputStream(plainPath), matches.get(0).A, JSONWriter.Feature.PrettyFormat);
         }
     }
@@ -162,7 +167,8 @@ public class Main {
 
     /**
      * 生成用户信息
-     * @param uid 用户 uid
+     *
+     * @param uid       用户 uid
      * @param plainPath 输出路径
      * @throws Throwable 异常信息
      */
@@ -179,11 +185,10 @@ public class Main {
 
         System.out.print("筛选该用户提交");
         List<SubmissionData> currentSubmissionData = new ArrayList<>(submissionData.stream().filter(o -> o.user().id() == uid).toList());
-        currentSubmissionData.sort(Comparator.comparingLong(o -> -o.at()));
         System.out.println("， 完成");
 
         System.out.print("分类答案判定");
-        Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData = SubmissionTool.classifyVerdict(submissionData);
+        Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData = SubmissionTool.classifyVerdict(currentSubmissionData);
         System.out.println("， 完成");
 
         //Step3. 爬取训练数据
@@ -203,8 +208,8 @@ public class Main {
     /**
      * 生成分类型评测榜单
      *
-     * @param type     类型，如 ac, wa
-     * @param imgPath  以图片格式输出的路径
+     * @param type      类型，如 ac, wa
+     * @param imgPath   以图片格式输出的路径
      * @param plainPath 以文本格式输出的路径
      * @throws Throwable 异常信息
      */
@@ -241,7 +246,7 @@ public class Main {
     /**
      * 生成今日当前榜单
      *
-     * @param imgPath  以图片格式输出的路径
+     * @param imgPath   以图片格式输出的路径
      * @param plainPath 以文本格式输出的路径
      * @throws Throwable 异常信息
      */
@@ -269,6 +274,7 @@ public class Main {
 
         System.out.print("分类答案判定");
         Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData = SubmissionTool.classifyVerdict(submissionData);
+        List<Pair<Integer, Integer>> hourlyData = SubmissionTool.classifyHourly(submissionData, false);
         System.out.println("， 完成");
 
         System.out.print("开始数据分析");
@@ -282,7 +288,7 @@ public class Main {
 
         //Step5. 生成结果
         System.out.println("\n正在生成结果\n\n");
-        Pair<NowRankHolder, String> result = packNowResult(deltaRankingData, submissionData, verdictData, firstACData, newbieTrainingData, needFull);
+        Pair<NowRankHolder, String> result = packNowResult(deltaRankingData, submissionData, verdictData, hourlyData, firstACData, newbieTrainingData, needFull);
         ImgGenerator.generateNowRankImg(result.A, imgPath);
         saveTextLocally(result.B, plainPath);
 
@@ -293,14 +299,14 @@ public class Main {
     /**
      * 生成每日榜单
      *
-     * @param imgPath  以图片格式输出的路径
+     * @param imgPath   以图片格式输出的路径
      * @param plainPath 以文本格式输出的路径
      * @throws Throwable 异常信息
      */
     private static void generateFullRank(String imgPath, String plainPath) throws Throwable {
         DailyRankData result = RankTool.fetchDailyRankData();
 
-        if(result != null){
+        if (result != null) {
             System.out.println("重复生成榜单，将不再爬取");
         } else {
             //Step1. 刷新RP
@@ -330,6 +336,7 @@ public class Main {
 
             System.out.print("分类答案判定");
             Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData = SubmissionTool.classifyVerdict(submissionData);
+            List<Pair<Integer, Integer>> hourlyData = SubmissionTool.classifyHourly(submissionData, true);
             System.out.println("， 完成");
 
             System.out.print("开始数据分析");
@@ -344,13 +351,13 @@ public class Main {
 
             //Step5. 生成结果
             System.out.println("\n正在生成结果\n\n");
-            result = packFullResult(deltaRankingData, submissionData, verdictData, firstACData, mostPopularProblem, newbieTrainingData);
+            result = packFullResult(deltaRankingData, submissionData, verdictData, hourlyData, firstACData, mostPopularProblem, newbieTrainingData);
 
             QuickUtils.saveJsonData(result, "daily", true);
         }
 
-        if(imgPath != null) ImgGenerator.generateFullRankImg(result.fullRankHolder(), imgPath);
-        if(plainPath != null) saveTextLocally(result.plain(), plainPath);
+        if (imgPath != null) ImgGenerator.generateFullRankImg(result.fullRankHolder(), imgPath);
+        if (plainPath != null) saveTextLocally(result.plain(), plainPath);
 
         System.out.println(result.plain());
     }
@@ -358,6 +365,7 @@ public class Main {
 
     /**
      * 调用工具刷新 RP，并等待刷新结束
+     *
      * @throws Throwable 异常信息
      */
     private static void callReloadRP() throws Throwable {
@@ -460,6 +468,14 @@ public class Main {
     }
 
 
+    /**
+     * 处理并包装用户数据
+     * @param userInfoData 用户数据
+     * @param currentSubmissionData 当前提交数据
+     * @param verdictData 当前评测数据
+     * @param trainingProgress 当前用户的训练题单完成度
+     * @return 处理完成后的用户信息
+     */
     private static Pair<UserInfoHolder, String> packUserInfo(
             UserInfoData userInfoData,
             List<SubmissionData> currentSubmissionData,
@@ -475,9 +491,9 @@ public class Main {
                 .append("\n").append(userInfoData.userStatus())
                 .append("\n").append(userInfoData.userProgress());
 
-        if(trainingProgress == -1){
+        if (trainingProgress == -1) {
             plainResult.append(", 未参加 2023级新手村训练");
-        }else{
+        } else {
             plainResult.append(", 训练题单完成度: ").append(trainingProgress).append("%");
         }
 
@@ -485,7 +501,7 @@ public class Main {
 
         plainResult.append("\n\n社交信息：")
                 .append("\nQQ: ").append(userInfoData.qq());
-        if(!userInfoData.qq().equals("unknown")) plainResult.append(" @").append(userInfoData.qqName());
+        if (!userInfoData.qq().equals("unknown")) plainResult.append(" @").append(userInfoData.qqName());
         //为了防止被解析成url，给域名包一个 []
         plainResult.append("\n邮箱: ").append(userInfoData.mail().replaceAll("(\\.\\w+)$", " [$1]"));
 
@@ -494,10 +510,10 @@ public class Main {
         SubmissionData lastSubmit = null;
         StringBuilder submitDetail = new StringBuilder();
 
-        if(submitCount == 0) {
+        if (submitCount == 0) {
             plainResult.append("\n\n今日暂无提交数据");
         } else {
-            lastSubmit = currentSubmissionData.get(0);
+            lastSubmit = currentSubmissionData.stream().max(Comparator.comparingLong(o -> -o.at())).get();
             plainResult.append("\n\n最后一次提交：")
                     .append("\n").append(lastSubmit.problemName())
                     .append("\n于 ")
@@ -516,18 +532,11 @@ public class Main {
             plainResult.append(submitDetail).append("\n");
         }
 
-        plainResult.append("\n--------\n")
-                .append(String.format(Locale.ROOT, """
-                        Generated by %s.
-                        ©2023 Floating Ocean.
-                        At""", Global.buildInfoInline))
-                .append(" ")
-                .append(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
+        appendGenerationInfo(plainResult);
 
         return Pair.of(new UserInfoHolder(userInfoData, submitCount, submitAve, acProportion, submitDetail.toString(),
                 lastSubmit, trainingProgress), plainResult.toString());
     }
-
 
 
     /**
@@ -541,6 +550,7 @@ public class Main {
             List<RankingData> deltaRankingData,
             List<SubmissionData> submissionData,
             Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData,
+            List<Pair<Integer, Integer>> hourlyData,
             Pair<Long, Pair<UserData, String>> firstACdata,
             List<TrainingData> newbieTrainingData,
             boolean needFull
@@ -550,19 +560,13 @@ public class Main {
         plainResult.append("今日当前题数榜单：\n\n");
 
         plainResult.append("今日过题数 ").append(needFull ? "Full" : "Top 5").append("：\n");
-        SubmissionPackHolder submissionPackHolder = packSubmissionPackData(submissionData, verdictData, firstACdata, deltaRankingData, plainResult, needFull ? Integer.MAX_VALUE : 5);
+        SubmissionPackHolder submissionPackHolder = packSubmissionPackData(submissionData, verdictData, hourlyData, firstACdata, deltaRankingData, plainResult, needFull ? Integer.MAX_VALUE : 5);
 
         plainResult.append("\n新生训练题单完成比 Top 5：\n");
         Pair<StringBuilder, List<SimpleRankItem>> top52 = generateRank(newbieTrainingData, 5, x -> !Global.config.excludeID().contains(x.user().id()), "%");
         plainResult.append(top52.A);
 
-        plainResult.append("\n--------\n")
-                .append(String.format(Locale.ROOT, """
-                        Generated by %s.
-                        ©2023 Floating Ocean.
-                        At""", Global.buildInfoInline))
-                .append(" ")
-                .append(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
+        appendGenerationInfo(plainResult);
 
         return Pair.of(new NowRankHolder(top52.B, submissionPackHolder), plainResult.toString());
     }
@@ -583,6 +587,7 @@ public class Main {
             List<RankingData> deltaRankingData,
             List<SubmissionData> submissionData,
             Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData,
+            List<Pair<Integer, Integer>> hourlyData,
             Pair<Long, Pair<UserData, String>> firstACdata,
             CounterData mostPopular,
             List<TrainingData> newbieTrainingData
@@ -598,7 +603,7 @@ public class Main {
         List<RankingData> deltaNewbie = deltaRankingData.stream().filter(x -> x.id() >= 1014).toList();
 
         plainResult.append("\n\n昨日过题数 Top 5：\n");
-        SubmissionPackHolder submissionPackHolder = packSubmissionPackData(submissionData, verdictData, firstACdata, deltaNewbie, plainResult, 5);
+        SubmissionPackHolder submissionPackHolder = packSubmissionPackData(submissionData, verdictData, hourlyData, firstACdata, deltaNewbie, plainResult, 5);
 
         String mostPopularProblem = mostPopular.name();
         int mostPopularCount = mostPopular.count();
@@ -615,13 +620,7 @@ public class Main {
         Pair<StringBuilder, List<SimpleRankItem>> fullRank = generateRank(deltaRankingData, Integer.MAX_VALUE, each -> each.id() >= 1014 && !Global.config.excludeID().contains(each.id()), "");
         plainResult.append(fullRank.A);
 
-        plainResult.append("\n--------\n")
-                .append(String.format(Locale.ROOT, """
-                        Generated by %s.
-                        ©2023 Floating Ocean.
-                        At""", Global.buildInfoInline))
-                .append(" ")
-                .append(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
+        appendGenerationInfo(plainResult);
 
         return new DailyRankData(new FullRankHolder(top1, submissionPackHolder, mostPopularProblem, mostPopularCount, top10.B, fullRank.B), plainResult.toString());
     }
@@ -629,16 +628,18 @@ public class Main {
 
     /**
      * 包装提交数据
+     *
      * @param submissionData 提交数据
-     * @param verdictData 评测数据
-     * @param firstACdata 第一个通过的数据
-     * @param deltaNewbie 新生的榜单数据
-     * @param plainResult 目标文本输出
+     * @param verdictData    评测数据
+     * @param firstACdata    第一个通过的数据
+     * @param deltaNewbie    新生的榜单数据
+     * @param plainResult    目标文本输出
      * @return 包装后的数据
      */
     private static SubmissionPackHolder packSubmissionPackData(
             List<SubmissionData> submissionData,
             Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData,
+            List<Pair<Integer, Integer>> hourlyData,
             Pair<Long, Pair<UserData, String>> firstACdata,
             List<RankingData> deltaNewbie,
             StringBuilder plainResult,
@@ -661,13 +662,57 @@ public class Main {
         plainResult.append("提交总数：\n").append(submitCount)
                 .append("\n提交平均分：\n").append(String.format(Locale.ROOT, "%.2f", submitAve))
                 .append("\n提交通过率：\n").append(String.format(Locale.ROOT, "%.2f", acProportion))
-                .append("\n\n第一位AC提交者：\n").append(firstACWho)
-                .append("\n").append(firstACInfo).append("\n");
+                .append("\n");
 
         StringBuilder submitDetail = generateSubmitDetail(verdictData);
-        plainResult.append("共收到 ").append(submitUserAmount).append(" 个人的提交，其中包含 ")
+        plainResult.append("收到 ").append(submitUserAmount).append(" 个人的提交，其中包含 ")
                 .append(submitDetail).append("\n");
-        return new SubmissionPackHolder(tops.B, submitUserAmount, submitCount, submitAve, acProportion, submitDetail.toString(), firstACWho, firstACInfo.toString(), topCount);
+
+        plainResult.append("\n每小时提交信息：\n");
+        Pair<List<Pair<Double, Double>>, String> hourlyInfoData = packHourlyData(hourlyData, plainResult);
+
+        plainResult.append("\n第一位AC提交者：\n").append(firstACWho)
+                .append("\n").append(firstACInfo).append("\n");
+        return new SubmissionPackHolder(tops.B, submitUserAmount, submitCount, submitAve, acProportion, submitDetail.toString(), hourlyInfoData.A, hourlyInfoData.B, firstACWho, firstACInfo.toString(), topCount);
+    }
+
+
+    /**
+     * 处理并包装每小时的数据
+     * @param hourlyData 每小时的源数据 <每小时总提交量, 每小时总Ac量>
+     * @param plainResult 目标文本输出
+     * @return 处理结束后的每小时数据 <<每小时提交量对最大提交量的占比, 每小时的Ac占比>, 文本结果>
+     */
+    private static Pair<List<Pair<Double, Double>>, String> packHourlyData(List<Pair<Integer, Integer>> hourlyData, StringBuilder plainResult) {
+        Pair<List<Pair<Double, Double>>, Integer> hourlyInfoData = generateHourlyInfoData(hourlyData);
+        StringBuilder hourlyInfoDetail = new StringBuilder();
+        int maxTime = 0;
+        double maxTimeAc = 0;
+        for(int i = 0; i < 24; i ++){
+            Pair<Double, Double> each = hourlyInfoData.A.get(i);
+            if(each.A == 0) continue;
+            plainResult.append(String.format(Locale.ROOT, "%02d", i)).append(": ")
+                    .append(String.format(Locale.ROOT, "%.2f", each.A * 100))
+                    .append("% Top, ")
+                    .append(String.format(Locale.ROOT, "%.2f", each.B * 100))
+                    .append("% Ac.\n");
+            if(each.A == 1){
+                maxTime = i;
+                maxTimeAc = Math.max(maxTimeAc, each.B);
+            }
+        }
+
+        hourlyInfoDetail.append("提交高峰时段为 ")
+                .append(String.format(Locale.ROOT, "%02d:00", maxTime))
+                .append(" - ")
+                .append(String.format(Locale.ROOT, "%02d:59", maxTime))
+                .append(". 在 ").append(hourlyInfoData.B).append(" 份提交中, 通过率为 ")
+                .append(String.format(Locale.ROOT, "%.2f", maxTimeAc * 100))
+                .append("%.");
+
+        plainResult.append(hourlyInfoDetail).append("\n");
+
+        return Pair.of(hourlyInfoData.A, hourlyInfoDetail.toString());
     }
 
 
@@ -692,13 +737,7 @@ public class Main {
         Pair<StringBuilder, List<SimpleRankItem>> top10 = generateRank(verdictRank.B, 10, x -> !Global.config.excludeID().contains(x.user().id()), "");
         plainResult.append(top10.A).append("\n");
 
-        plainResult.append("\n--------\n")
-                .append(String.format(Locale.ROOT, """
-                        Generated by %s.
-                        ©2023 Floating Ocean.
-                        At""", Global.buildInfoInline))
-                .append(" ")
-                .append(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
+        appendGenerationInfo(plainResult);
 
         return Pair.of(new VerdictRankHolder(type, top10.B, verdictRank.A.B, (double) verdictRank.A.A * 100 / verdictRank.A.B),
                 plainResult.toString());
@@ -707,6 +746,7 @@ public class Main {
 
     /**
      * 生成提交总信息
+     *
      * @param verdictData 分类型评测信息
      * @return 提交总信息
      */
@@ -723,15 +763,16 @@ public class Main {
         }
         return submitDetail;
     }
-    
-    
+
+
     /**
      * 生成排行信息
+     *
      * @param rankData 排行数据
-     * @param limit 限制显示前几名
-     * @param rated 算入正式榜单的条件
-     *              传入 null 即算入所有人
-     * @param suffix 每行数据的后缀，如百分号
+     * @param limit    限制显示前几名
+     * @param rated    算入正式榜单的条件
+     *                 传入 null 即算入所有人
+     * @param suffix   每行数据的后缀，如百分号
      * @return 排行信息
      */
     private static <T extends RankableRecord> Pair<StringBuilder, List<SimpleRankItem>> generateRank(
@@ -739,7 +780,7 @@ public class Main {
             int limit,
             Predicate<T> rated,
             String suffix
-    ){
+    ) {
 
         Map<Integer, Integer> rank = new HashMap<>();
         StringBuilder plainResult = new StringBuilder();
@@ -750,7 +791,7 @@ public class Main {
             T each = rankData.get(i);
             if (!rank.containsKey(each.fetchCount())) rank.put(each.fetchCount(), currentRank);
             if (rank.get(each.fetchCount()) > limit) break;
-            if (rated == null || rated.test(each)) currentRank ++; //判断是否不计入榜中
+            if (rated == null || rated.test(each)) currentRank++; //判断是否不计入榜中
             plainResult.append(rated == null || rated.test(each) ? rank.get(each.fetchCount()) : "*")
                     .append(". ").append(each.fetchWho().name()).append(": ").append(each.fetchCount()).append(suffix);
             visualResult.add(new SimpleRankItem(
@@ -759,5 +800,33 @@ public class Main {
             if (i < rankData.size() - 1) plainResult.append("\n");
         }
         return Pair.of(plainResult, visualResult);
+    }
+
+    /**
+     * 将每小时详细数据转化为比例数据
+     * @param hourlyData 每小时详细数据 <每小时总提交量, 每小时总Ac量>
+     * @return <<每小时提交量对最大提交量的占比, 每小时的Ac占比>, 最多提交数量>
+     */
+    private static Pair<List<Pair<Double, Double>>, Integer> generateHourlyInfoData(List<Pair<Integer, Integer>> hourlyData){
+        int maxCount = hourlyData.stream().max(Comparator.comparingInt(o -> o.A))
+                .orElse(Pair.of(1, 0)).A;
+        List<Pair<Double, Double>> hourlyInfoData = new ArrayList<>();
+        hourlyData.forEach(each ->
+                hourlyInfoData.add(Pair.of((double) each.A / maxCount, (double) each.B / each.A)));
+        return Pair.of(hourlyInfoData, maxCount);
+    }
+
+    /**
+     * 将输出信息拼到结尾
+     * @param plainResult 目标文本输出
+     */
+    private static void appendGenerationInfo(StringBuilder plainResult) {
+        plainResult.append("\n--------\n")
+                .append(String.format(Locale.ROOT, """
+                        Generated by %s.
+                        ©2023 Floating Ocean.
+                        At""", Global.buildInfoInline))
+                .append(" ")
+                .append(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()));
     }
 }

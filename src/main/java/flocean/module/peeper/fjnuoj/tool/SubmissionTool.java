@@ -13,6 +13,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class SubmissionTool {
 
@@ -38,11 +39,11 @@ public class SubmissionTool {
     public static List<SubmissionData> fetchData(boolean isYesterday) throws Throwable {
         List<SubmissionData> submissionDataList = new ArrayList<>();
         int i = 1;
-        long[] yesterdayTime = new long[2];
-        getYesterdayTime(yesterdayTime);
+        long[] timeRange = new long[2];
+        getYesterdayTime(timeRange);
         if (!isYesterday) {
-            yesterdayTime[0] += 86400;
-            yesterdayTime[1] += 86400;
+            timeRange[0] += 86400;
+            timeRange[1] += 86400;
         }
         while (true) {
             final String url = Global.config.ojUrl() + "record?page=" + (i++);
@@ -64,8 +65,8 @@ public class SubmissionTool {
                 String[] submitterIdData = who.attr("href").split("/");
                 int submitterId = Integer.parseInt(submitterIdData[submitterIdData.length - 1]);
                 long at = Long.parseLong(time.attr("data-timestamp"));
-                if (at > yesterdayTime[1]) continue;
-                if (at < yesterdayTime[0]) {
+                if (at >= timeRange[1]) continue;
+                if (at < timeRange[0]) {
                     eof = true;
                     break;
                 }
@@ -74,6 +75,43 @@ public class SubmissionTool {
             if (eof) break;
         }
         return submissionDataList;
+    }
+
+    /**
+     * 分类提交信息，得到分小时评测榜单
+     *
+     * @param submissionDataList 总提交信息
+     * @param isYesterday 是否是昨天的数据
+     * @return 分小时评测榜单 <每小时的提交量, 每小时的通过率>
+     */
+    public static List<Pair<Integer, Integer>> classifyHourly(List<SubmissionData> submissionDataList, boolean isYesterday) {
+        List<Pair<Integer, Integer>> hourlyData = new ArrayList<>();
+        long[] timeRange = new long[2];
+        getYesterdayTime(timeRange);
+        AtomicLong startTime = new AtomicLong(timeRange[0] + (isYesterday ? 0 : 86400));
+        Pair<Integer, Integer> currentData = Pair.of(0, 0);
+        submissionDataList.stream().sorted(Comparator.comparingLong(SubmissionData::at)).forEach(each -> {
+            long endTime = startTime.get() + 3600; //按 [startTime, endTime) 分段，每段3600秒
+            if(each.at() >= endTime){
+                hourlyData.add(Pair.copy(currentData));
+                currentData.A = 0;
+                currentData.B = 0;
+                startTime.set(endTime);
+            }else{
+                currentData.A ++;
+                if(each.verdictType() == VerdictType.ACCEPTED) {
+                    currentData.B ++;
+                }
+            }
+        });
+
+        //保证包含24小时的数据
+        while (hourlyData.size() < 24) {
+            hourlyData.add(Pair.copy(currentData));
+            currentData.A = 0;
+            currentData.B = 0;
+        }
+        return hourlyData;
     }
 
     /**
@@ -127,14 +165,12 @@ public class SubmissionTool {
      */
     public static CounterData findMostPopularProblem(List<SubmissionData> submissionDataList) {
         Map<String, Set<UserData>> submissionMap = new HashMap<>();
-        for (var each : submissionDataList) {
+        submissionDataList.forEach(each -> {
             submissionMap.computeIfAbsent(each.problemName(), k -> new HashSet<>());
             submissionMap.get(each.problemName()).add(each.user());
-        }
+        });
         List<Pair<String, Set<UserData>>> problemList = new ArrayList<>();
-        for (var each : submissionMap.keySet()) {
-            problemList.add(Pair.of(each, submissionMap.get(each)));
-        }
+        submissionMap.forEach((key, value) -> problemList.add(Pair.of(key, value)));
         problemList.sort(Comparator.comparingInt(o -> -o.B.size()));
         return new CounterData(problemList.get(0).A, problemList.get(0).B.size());
     }
@@ -163,12 +199,10 @@ public class SubmissionTool {
      * @return 第一份ac提交的信息 <提交时间, <用户名, 题目名>>
      */
     public static Pair<Long, Pair<UserData, String>> getFirstACAttempt(List<SubmissionData> submissionData) {
-        for (int i = submissionData.size() - 1; i >= 0; i--) {
-            SubmissionData nowData = submissionData.get(i);
-            if (nowData.verdictType() != VerdictType.ACCEPTED) continue;
-            return Pair.of(nowData.at(), Pair.of(nowData.user(), nowData.problemName()));
-        }
-        return null;
+        var firstAc = submissionData.stream().sorted(Comparator.comparingLong(SubmissionData::at))
+                .filter(o -> o.verdictType() == VerdictType.ACCEPTED).findFirst()
+                .orElse(null);
+        return firstAc != null ? Pair.of(firstAc.at(), Pair.of(firstAc.user(), firstAc.problemName())) : null;
     }
 
 }

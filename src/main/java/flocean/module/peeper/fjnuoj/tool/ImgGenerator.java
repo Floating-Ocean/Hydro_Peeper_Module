@@ -68,8 +68,11 @@ public class ImgGenerator {
         StyledString submitAcHowMain = packString(submitAc[0], "H", 72);
         StyledString submitAcHowSub = packString("." + submitAc[1], "H", 72);
 
-        StyledString submitDetailWhat = packString("共收到 " + fullRankHolder.submitUserAmount +
+        StyledString submitDetailWhat = packString("收到 " + fullRankHolder.submitUserAmount +
                 " 个人的提交，其中包含 " + fullRankHolder.submitDetail, "M", 28);
+
+        StyledString hourlyTitle = packString("提交时间分布", "B", 36);
+        StyledString hourlyWhat = packString(fullRankHolder.hourlyInfoDetail, "M", 28);
 
         StyledString firstACTitle = packString("昨日最速通过", "B", 36);
         StyledString firstACWho = packString(fullRankHolder.firstACName, "H", 72);
@@ -115,10 +118,11 @@ public class ImgGenerator {
                 submitCountTitle, submitCountHow, submitDetailWhat,
                 firstACTitle, firstACWho, firstACWhat,
                 mostPopularProblemTitle, mostPopularProblemWhat, mostPopularCountHow,
+                hourlyTitle, hourlyWhat,
                 top10Subtitle, top10Title,
                 fullRankSubtitle, fullRankTitle,
                 copyright) +
-                calculateHeight(top5Who, top10Who, fullRankWho) + 1176;
+                calculateHeight(top5Who, top10Who, fullRankWho) + 1380 + 200;
 
         BufferedImage outputImg = new BufferedImage(1280, totalHeight + 300, BufferedImage.TYPE_INT_BGR);
         AtomicInteger currentY = new AtomicInteger(134);
@@ -136,6 +140,7 @@ public class ImgGenerator {
         drawSubmitDetail(currentY, outputCanvas,
                 submitCountTitle, submitCountHow, submitAveTitle, submitAveHowMain, submitAveHowSub,
                 submitAcTitle, submitAcHowMain, submitAcHowSub, submitDetailWhat,
+                hourlyTitle, fullRankHolder.hourlyInfoData, hourlyWhat,
                 firstACTitle, firstACWho, firstACWhat);
 
         drawText(outputCanvas, mostPopularProblemTitle, 8, currentY);
@@ -204,6 +209,9 @@ public class ImgGenerator {
         StyledString submitDetailWhat = packString("收到 " + nowRankHolder.submitUserAmount +
                 " 个人的提交，其中包含 " + nowRankHolder.submitDetail, "M", 28);
 
+        StyledString hourlyTitle = packString("提交时间分布", "B", 36);
+        StyledString hourlyWhat = packString(nowRankHolder.hourlyInfoDetail, "M", 28);
+
         StyledString firstACTitle = packString("今日最速通过", "B", 36);
         StyledString firstACWho = packString(nowRankHolder.firstACName, "H", 72);
         StyledString firstACWhat = packString(nowRankHolder.firstACInfo, "M", 28);
@@ -230,9 +238,10 @@ public class ImgGenerator {
                 topsSubtitle, topsTitle,
                 submitCountTitle, submitCountHow, submitDetailWhat,
                 firstACTitle, firstACWho, firstACWhat,
+                hourlyTitle, hourlyWhat,
                 top52Subtitle, top52Title,
                 copyright) +
-                calculateHeight(topsWho, top52Who) + 736;
+                calculateHeight(topsWho, top52Who) + 940 + 200;
 
         BufferedImage outputImg = new BufferedImage(1280, totalHeight + 300, BufferedImage.TYPE_INT_BGR);
         AtomicInteger currentY = new AtomicInteger(134);
@@ -247,6 +256,7 @@ public class ImgGenerator {
         drawSubmitDetail(currentY, outputCanvas,
                 submitCountTitle, submitCountHow, submitAveTitle, submitAveHowMain, submitAveHowSub,
                 submitAcTitle, submitAcHowMain, submitAcHowSub, submitDetailWhat,
+                hourlyTitle, nowRankHolder.hourlyInfoData, hourlyWhat,
                 firstACTitle, firstACWho, firstACWhat);
 
         drawText(outputCanvas, top52Subtitle, 8, currentY);
@@ -361,11 +371,22 @@ public class ImgGenerator {
 
 
     /**
+     * 绘制提交信息
      *
      * @param currentY 开始绘制文本的高度
      * @param outputCanvas 目标图层
      */
-    private static void drawSubmitDetail(AtomicInteger currentY, Graphics2D outputCanvas, StyledString submitCountTitle, StyledString submitCountHow, StyledString submitAveTitle, StyledString submitAveHowMain, StyledString submitAveHowSub, StyledString submitAcTitle, StyledString submitAcHowMain, StyledString submitAcHowSub, StyledString submitDetailWhat, StyledString firstACTitle, StyledString firstACWho, StyledString firstACWhat) {
+    private static void drawSubmitDetail(
+            AtomicInteger currentY, Graphics2D outputCanvas,
+            StyledString submitCountTitle, StyledString submitCountHow,
+            StyledString submitAveTitle, StyledString submitAveHowMain, StyledString submitAveHowSub,
+            StyledString submitAcTitle, StyledString submitAcHowMain, StyledString submitAcHowSub,
+            StyledString submitDetailWhat,
+            StyledString hourlyTitle, List<Pair<Double, Double>> hourlyInfoData, StyledString hourlyWhat,
+            StyledString firstACTitle, StyledString firstACWho,
+            StyledString firstACWhat
+    ) {
+
         AtomicInteger unchangedY = new AtomicInteger(currentY.get());
         drawText(outputCanvas, submitCountTitle, 8, currentY);
         drawText(outputCanvas, submitCountHow, 32, currentY);
@@ -401,12 +422,59 @@ public class ImgGenerator {
         drawText(outputCanvas, submitDetailWhat, 108, currentY);
 
         outputCanvas.setColor(Color.black);
+        drawText(outputCanvas, hourlyTitle, 24, currentY);
+        drawVerticalGraph(outputCanvas, hourlyInfoData, 40, currentY);
+        outputCanvas.setColor(new Color(0, 0, 0, 136));
+        drawText(outputCanvas, hourlyWhat, 108, currentY);
+
+        outputCanvas.setColor(Color.black);
         drawText(outputCanvas, firstACTitle, 8, currentY);
         drawText(outputCanvas, firstACWho, 32, currentY);
         outputCanvas.setColor(new Color(0, 0, 0, 136));
         drawText(outputCanvas, firstACWhat, 108, currentY);
 
         outputCanvas.setColor(Color.black);
+    }
+
+    /**
+     * 绘制竖条形图
+     * @param outputCanvas 目标图层
+     * @param content 条形图数据
+     * @param paddingBottom 下边距
+     * @param currentY 开始绘制的高度
+     */
+    private static void drawVerticalGraph(Graphics2D outputCanvas, List<Pair<Double, Double>> content, int paddingBottom, AtomicInteger currentY){
+        int currentX = 152;
+        currentY.addAndGet(16);
+
+        //绘制边框
+        outputCanvas.setColor(new Color(0, 0, 0, 32));
+        outputCanvas.fillRect(128, currentY.get(), 24, 4);
+        outputCanvas.fillRect(128, currentY.get() + 4, 4, 20);
+        outputCanvas.fillRect(128, currentY.get() + 240, 24, 4);
+        outputCanvas.fillRect(128, currentY.get() + 220, 4, 20);
+
+        for(var each : content){
+            int progressLen = (int)(24 + 176 * each.A),
+                subProgressLen = each.A > 0 ? (int)(24 + 176 * each.A * each.B) : 24;
+            AtomicInteger lineY = new AtomicInteger(currentY.get() + 24);
+
+            outputCanvas.setColor(new Color(0, 0, 0, 32));
+            outputCanvas.fillRoundRect(currentX, lineY.get() + 200 - progressLen, 24, progressLen, 24, 24);
+            outputCanvas.setColor(new Color(0, 0, 0, 16));
+            outputCanvas.fillRoundRect(currentX, lineY.get() + 200 - subProgressLen, 24, subProgressLen, 24, 24);
+            currentX += 24 + 16;
+        }
+
+        currentX -= 24 + 16;
+        outputCanvas.setColor(new Color(0, 0, 0, 32));
+        outputCanvas.fillRect(currentX + 24, currentY.get(), 24, 4);
+        outputCanvas.fillRect(currentX + 44, currentY.get() + 4, 4, 20);
+        outputCanvas.fillRect(currentX + 24, currentY.get() + 240, 24, 4);
+        outputCanvas.fillRect(currentX + 44, currentY.get() + 220, 4, 20);
+
+        outputCanvas.setColor(Color.BLACK);
+        currentY.addAndGet(paddingBottom + 224);
     }
 
 
@@ -418,16 +486,26 @@ public class ImgGenerator {
      * @param currentY 开始绘制文本的高度
      */
     private static void drawRankText(Graphics2D outputCanvas, List<RankDrawHolder> content, int paddingBottom, AtomicInteger currentY){
+        String preRank = ""; //上一个 rank
         for(var each : content){
             int progressLen = (int)(360 + 440 * each.percent);
 
             AtomicInteger lineY = new AtomicInteger(currentY.get());
             int currentX = 128 + 32;
-            outputCanvas.setColor(new Color(0, 0, 0, each.rated ? 255 : 100));
+            if(each.rated){
+                //相同 rank 不重复显示，显示为透明
+                outputCanvas.setColor(new Color(0, 0, 0,
+                        each.strings[0].content.equals(preRank) ? 0 : 255));
+                preRank = each.strings[0].content;
+            }else{
+                //打星显示为半透明
+                outputCanvas.setColor(new Color(0, 0, 0, 100));
+            }
             drawText(outputCanvas, each.strings[0], currentX, 12, currentY);
 
             currentX += ImgConvert.calculateStringWidth(each.strings[0].font, each.strings[0].content) + 28;
             currentY.set(lineY.get() + 40);
+            outputCanvas.setColor(new Color(0, 0, 0, each.rated ? 255 : 100));
             drawText(outputCanvas, each.strings[1], currentX, 12, currentY);
 
             currentX = Math.max(progressLen + 128, currentX + ImgConvert.calculateStringWidth(each.strings[1].font, each.strings[1].content)) + 36;
@@ -567,25 +645,29 @@ public class ImgGenerator {
     }
 
     public record FullRankHolder(String top1, List<SimpleRankItem> top5, long submitUserAmount, int submitCount, double submitAve, double acProportion, String submitDetail,
+                                 List<Pair<Double, Double>> hourlyInfoData, String hourlyInfoDetail,
                                  String firstACName, String firstACInfo, String mostPopularProblem, int mostPopularCount,
                                  List<SimpleRankItem> top10, List<SimpleRankItem> fullRank) {
 
         public FullRankHolder(String top1, SubmissionPackHolder submissionData, String mostPopularProblem, int mostPopularCount, List<SimpleRankItem> top10, List<SimpleRankItem> fullRank) {
-            this(top1, submissionData.tops, submissionData.submitUserAmount, submissionData.submitCount, submissionData.submitAve, submissionData.acProportion, submissionData.submitDetail, submissionData.firstACName, submissionData.firstACInfo, mostPopularProblem, mostPopularCount, top10, fullRank);
+            this(top1, submissionData.tops, submissionData.submitUserAmount, submissionData.submitCount, submissionData.submitAve, submissionData.acProportion, submissionData.submitDetail, submissionData.hourlyInfoData, submissionData.hourlyInfoDetail, submissionData.firstACName, submissionData.firstACInfo, mostPopularProblem, mostPopularCount, top10, fullRank);
         }
     }
 
     public record NowRankHolder(List<SimpleRankItem> tops, List<SimpleRankItem> top52, long submitUserAmount, int submitCount, double submitAve, double acProportion, String submitDetail,
+                                List<Pair<Double, Double>> hourlyInfoData, String hourlyInfoDetail,
                                 String firstACName, String firstACInfo, int topCount) {
         public NowRankHolder(List<SimpleRankItem> top52, SubmissionPackHolder submissionData) {
-            this(submissionData.tops, top52, submissionData.submitUserAmount, submissionData.submitCount, submissionData.submitAve, submissionData.acProportion, submissionData.submitDetail, submissionData.firstACName, submissionData.firstACInfo, submissionData.topCount);
+            this(submissionData.tops, top52, submissionData.submitUserAmount, submissionData.submitCount, submissionData.submitAve, submissionData.acProportion, submissionData.submitDetail, submissionData.hourlyInfoData, submissionData.hourlyInfoDetail, submissionData.firstACName, submissionData.firstACInfo, submissionData.topCount);
         }
     }
 
     public record SubmissionPackHolder(List<SimpleRankItem> tops, long submitUserAmount, int submitCount, double submitAve, double acProportion, String submitDetail,
+                                       List<Pair<Double, Double>> hourlyInfoData, String hourlyInfoDetail,
                                        String firstACName, String firstACInfo, int topCount) {
     }
 
     public record VerdictRankHolder(VerdictType verdict, List<SimpleRankItem> top10, int submitCount, double proportion) {
     }
+
 }

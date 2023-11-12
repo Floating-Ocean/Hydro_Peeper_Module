@@ -31,6 +31,12 @@ public class TrainingTool {
     }
 
 
+    /**
+     * 爬取指定 uid 用户的训练数据
+     * @param uid uid
+     * @return 对应数据
+     * @throws Throwable 异常信息
+     */
     public static int fetchSingleData(int uid) throws Throwable{
         final String url = Global.config.ojUrl() + "training/64bcda4defe7b59ef9a36453?uid=" + uid;
         Document document = QuickUtils.wrapWithCookie(Jsoup.connect(url)).get();
