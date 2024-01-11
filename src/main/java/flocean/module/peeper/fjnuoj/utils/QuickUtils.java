@@ -25,6 +25,16 @@ import java.util.List;
 public class QuickUtils {
 
     /**
+     * 替换路径为正确的分隔符，防止在跨平台时出问题
+     *
+     * @return 校正后的路径
+     */
+    public static String decodePath(String path) {
+        return path.replace('\\', File.separatorChar)
+                .replace('/', File.separatorChar);
+    }
+
+    /**
      * 获取当前 jar 包工作路径，即 java -jar 工作路径/xxx.jar
      *
      * @return 路径
@@ -69,7 +79,7 @@ public class QuickUtils {
      * @throws Throwable 异常信息
      */
     public static File fetchFile(String path) throws Throwable {
-        File file = new File(path);
+        File file = new File(decodePath(path));
         if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) return null;
         if (!file.exists() && !file.createNewFile()) return null;
         return file;
