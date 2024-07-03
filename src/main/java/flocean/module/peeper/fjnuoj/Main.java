@@ -191,14 +191,14 @@ public class Main {
         Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData = SubmissionTool.classifyVerdict(currentSubmissionData);
         System.out.println("， 完成");
 
-        //Step3. 爬取训练数据
-        System.out.println("\n正在爬取该用户的训练数据");
-        int trainingProgress = TrainingTool.fetchSingleData(uid);
-        System.out.println(". 完成");
+//        //Step3. 爬取训练数据
+//        System.out.println("\n正在爬取该用户的训练数据");
+//        int trainingProgress = TrainingTool.fetchSingleData(uid);
+//        System.out.println(". 完成");
 
         //Step4. 生成结果
         System.out.println("\n正在生成结果\n\n");
-        Pair<UserInfoHolder, String> result = packUserInfo(userInfoHolder, currentSubmissionData, verdictData, trainingProgress);
+        Pair<UserInfoHolder, String> result = packUserInfo(userInfoHolder, currentSubmissionData, verdictData);//, trainingProgress);
         saveTextLocally(result.B, plainPath);
 
         System.out.println(result.B);
@@ -281,14 +281,14 @@ public class Main {
         Pair<Long, Pair<UserData, String>> firstACData = SubmissionTool.getFirstACAttempt(submissionData);
         System.out.println("， 完成");
 
-        //Step4. 爬取训练数据
-        System.out.println("\n正在爬取新生前10名的训练数据");
-        List<TrainingData> newbieTrainingData = dealTrainingData(rankingDataList, 10);
-        System.out.println("完成");
+//        //Step4. 爬取训练数据
+//        System.out.println("\n正在爬取新生前10名的训练数据");
+//        List<TrainingData> newbieTrainingData = dealTrainingData(rankingDataList, 10);
+//        System.out.println("完成");
 
         //Step5. 生成结果
         System.out.println("\n正在生成结果\n\n");
-        Pair<NowRankHolder, String> result = packNowResult(deltaRankingData, submissionData, verdictData, hourlyData, firstACData, newbieTrainingData, needFull);
+        Pair<NowRankHolder, String> result = packNowResult(rankingDataList, deltaRankingData, submissionData, verdictData, hourlyData, firstACData/*, newbieTrainingData*/, needFull);
         ImgGenerator.generateNowRankImg(result.A, imgPath);
         saveTextLocally(result.B, plainPath);
 
@@ -344,14 +344,14 @@ public class Main {
             Pair<Long, Pair<UserData, String>> firstACData = SubmissionTool.getFirstACAttempt(submissionData);
             System.out.println("， 完成");
 
-            //Step4. 爬取训练数据
-            System.out.println("\n正在爬取新生前20名的训练数据");
-            List<TrainingData> newbieTrainingData = dealTrainingData(rankingDataList);
-            System.out.println("完成");
+//            //Step4. 爬取训练数据
+//            System.out.println("\n正在爬取新生前20名的训练数据");
+//            List<TrainingData> newbieTrainingData = dealTrainingData(rankingDataList);
+//            System.out.println("完成");
 
             //Step5. 生成结果
             System.out.println("\n正在生成结果\n\n");
-            result = packFullResult(deltaRankingData, submissionData, verdictData, hourlyData, firstACData, mostPopularProblem, newbieTrainingData);
+            result = packFullResult(rankingDataList, deltaRankingData, submissionData, verdictData, hourlyData, firstACData, mostPopularProblem);//, newbieTrainingData);
 
             QuickUtils.saveJsonData(result, "daily", true);
         }
@@ -369,8 +369,9 @@ public class Main {
      * @throws Throwable 异常信息
      */
     private static void callReloadRP() throws Throwable {
-        System.out.println("正在刷新RP");
-        RPReloader.reload();
+        System.out.println("正在刷新RP和problemStat");
+        RPReloader.reload("problemStat");
+        RPReloader.reload("rp");
         System.out.println("刷新完成");
     }
 
@@ -391,43 +392,43 @@ public class Main {
     }
 
 
-    /**
-     * 处理并包装训练数据
-     *
-     * @param rankingDataList 训练数据
-     * @return 处理完成后的训练数据
-     * @throws Throwable 异常信息
-     */
-    private static List<TrainingData> dealTrainingData(List<RankingData> rankingDataList) throws Throwable {
-        return dealTrainingData(rankingDataList, 20);
-    }
+//    /**
+//     * 处理并包装训练数据
+//     *
+//     * @param rankingDataList 训练数据
+//     * @return 处理完成后的训练数据
+//     * @throws Throwable 异常信息
+//     */
+//    private static List<TrainingData> dealTrainingData(List<RankingData> rankingDataList) throws Throwable {
+//        return dealTrainingData(rankingDataList, 20);
+//    }
 
 
-    /**
-     * 处理并包装训练数据
-     *
-     * @param rankingDataList 训练数据
-     * @param limit           限制爬取多少个新生的训练页面
-     * @return 处理完成后的训练数据
-     * @throws Throwable 异常信息
-     */
-    private static List<TrainingData> dealTrainingData(
-            List<RankingData> rankingDataList,
-            int limit) throws Throwable {
-
-        List<RankingData> newbieRankingData = new ArrayList<>(rankingDataList.stream()
-                .filter(x -> x.id() >= 1014).toList());
-        newbieRankingData.sort((o1, o2) ->
-                o1.ac() == o2.ac() ? Integer.compare(o1.rank(), o2.rank()) : -Integer.compare(o1.ac(), o2.ac()));
-
-        List<TrainingData> newbieTrainingData =
-                TrainingTool.fetchData(newbieRankingData.stream().limit(limit).toList(),
-                        () -> System.out.print("."));
-
-        newbieTrainingData.sort((o1, o2) ->
-                o1.progress() == o2.progress() ? Integer.compare(o1.generalRank(), o2.generalRank()) : -Integer.compare(o1.progress(), o2.progress()));
-        return newbieTrainingData;
-    }
+//    /**
+//     * 处理并包装训练数据
+//     *
+//     * @param rankingDataList 训练数据
+//     * @param limit           限制爬取多少个新生的训练页面
+//     * @return 处理完成后的训练数据
+//     * @throws Throwable 异常信息
+//     */
+//    private static List<TrainingData> dealTrainingData(
+//            List<RankingData> rankingDataList,
+//            int limit) throws Throwable {
+//
+//        List<RankingData> newbieRankingData = new ArrayList<>(rankingDataList.stream()
+//                .filter(x -> x.id() >= 1014).toList());
+//        newbieRankingData.sort((o1, o2) ->
+//                o1.ac() == o2.ac() ? Integer.compare(o1.rank(), o2.rank()) : -Integer.compare(o1.ac(), o2.ac()));
+//
+//        List<TrainingData> newbieTrainingData =
+//                TrainingTool.fetchData(newbieRankingData.stream().limit(limit).toList(),
+//                        () -> System.out.print("."));
+//
+//        newbieTrainingData.sort((o1, o2) ->
+//                o1.progress() == o2.progress() ? Integer.compare(o1.generalRank(), o2.generalRank()) : -Integer.compare(o1.progress(), o2.progress()));
+//        return newbieTrainingData;
+//    }
 
 
     /**
@@ -474,16 +475,16 @@ public class Main {
      * @param userInfoData          用户数据
      * @param currentSubmissionData 当前提交数据
      * @param verdictData           当前评测数据
-     * @param trainingProgress      当前用户的训练题单完成度
+//     * @param trainingProgress      当前用户的训练题单完成度
      * @return 处理完成后的用户信息
      */
     private static Pair<UserInfoHolder, String> packUserInfo(
             UserInfoData userInfoData,
             List<SubmissionData> currentSubmissionData,
-            Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData,
-            int trainingProgress
+            Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData//,
+           //int trainingProgress
     ) {
-
+        int trainingProgress = -1;
         StringBuilder plainResult = new StringBuilder();
         plainResult.append("用户信息查询：\n\n");
 
@@ -492,7 +493,7 @@ public class Main {
                 .append("\n").append(userInfoData.userStatus())
                 .append("\n").append(userInfoData.userProgress());
 
-        if (trainingProgress == -1) {
+        if (trainingProgress == -1) {  //todo:这里要搞成Ranking里面的题数
             plainResult.append(", 未参加 2023级新手村训练");
         } else {
             plainResult.append(", 训练题单完成度: ").append(trainingProgress).append("%");
@@ -544,16 +545,17 @@ public class Main {
      * 处理并包装今日当前题数数据
      *
      * @param deltaRankingData   今日当前题数数据
-     * @param newbieTrainingData 新生训练数据
+//     * @param newbieTrainingData 新生训练数据
      * @return 处理完成后的今日当前题数数据 <包装数据，文本结果>
      */
     private static Pair<NowRankHolder, String> packNowResult(
+            List<RankingData> rankingDataList,
             List<RankingData> deltaRankingData,
             List<SubmissionData> submissionData,
             Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData,
             List<Pair<Integer, Integer>> hourlyData,
             Pair<Long, Pair<UserData, String>> firstACdata,
-            List<TrainingData> newbieTrainingData,
+            //List<TrainingData> newbieTrainingData,
             boolean needFull
     ) {
 
@@ -563,8 +565,8 @@ public class Main {
         plainResult.append("今日过题数 ").append(needFull ? "Full" : "Top 5").append("：\n");
         SubmissionPackHolder submissionPackHolder = packSubmissionPackData(submissionData, verdictData, hourlyData, firstACdata, deltaRankingData, plainResult, needFull ? Integer.MAX_VALUE : 5);
 
-        plainResult.append("\n新生训练题单完成比 Top 5：\n");
-        Pair<StringBuilder, List<SimpleRankItem>> top52 = generateRank(newbieTrainingData, 5, x -> !Global.config.excludeID().contains(x.user().id()), "%");
+        plainResult.append("\n新生排名 Top 5：\n");
+        Pair<StringBuilder, List<SimpleRankItem>> top52 = generateRank(rankingDataList, 5, x -> !Global.config.excludeID().contains(x.id()) && x.id() >= 1533, "题");
         plainResult.append(top52.A);
 
         appendGenerationInfo(plainResult);
@@ -581,17 +583,18 @@ public class Main {
      * @param verdictData        评测数据
      * @param firstACdata        第一份AC提交数据
      * @param mostPopular        最受欢迎的题目
-     * @param newbieTrainingData 新生训练数据
+//     * @param newbieTrainingData 新生训练数据
      * @return 处理完成后的每日总榜数据 <包装数据，文本结果>
      */
     private static DailyRankData packFullResult(
+            List<RankingData> rankingDataList,
             List<RankingData> deltaRankingData,
             List<SubmissionData> submissionData,
             Pair<Pair<Double, Double>, Map<VerdictType, Integer>> verdictData,
             List<Pair<Integer, Integer>> hourlyData,
             Pair<Long, Pair<UserData, String>> firstACdata,
-            CounterData mostPopular,
-            List<TrainingData> newbieTrainingData
+            CounterData mostPopular//,
+//            List<TrainingData> newbieTrainingData
     ) {
 
         StringBuilder plainResult = new StringBuilder();
@@ -601,7 +604,7 @@ public class Main {
                 .filter(x -> !Global.config.excludeID().contains(x.id())).toList().get(0).user();
         plainResult.append("昨日卷王：\n")
                 .append(top1);
-        List<RankingData> deltaNewbie = deltaRankingData.stream().filter(x -> x.id() >= 1014).toList();
+        List<RankingData> deltaNewbie = deltaRankingData.stream().filter(x -> x.id() >= 1533).toList();
 
         plainResult.append("\n\n昨日过题数 Top 5：\n");
         SubmissionPackHolder submissionPackHolder = packSubmissionPackData(submissionData, verdictData, hourlyData, firstACdata, deltaNewbie, plainResult, 5);
@@ -611,14 +614,14 @@ public class Main {
         plainResult.append("\n\n昨日最受欢迎的题目：\n").append(mostPopularProblem)
                 .append("\n共有 ").append(mostPopularCount).append(" 个人提交本题\n");
 
-        plainResult.append("\n新生训练题单完成比 Top 10：\n");
-        Pair<StringBuilder, List<SimpleRankItem>> top10 = generateRank(newbieTrainingData, 10, x -> !Global.config.excludeID().contains(x.user().id()), "%");
+        plainResult.append("\n新生排名 Top 10：\n");
+        Pair<StringBuilder, List<SimpleRankItem>> top10 = generateRank(rankingDataList, 10, x -> !Global.config.excludeID().contains(x.id()), "题");
         plainResult.append(top10.A).append("\n");
 
         plainResult.append("昨日 OJ 总榜：")
                 .append("\n");
 
-        Pair<StringBuilder, List<SimpleRankItem>> fullRank = generateRank(deltaRankingData, Integer.MAX_VALUE, each -> each.id() >= 1014 && !Global.config.excludeID().contains(each.id()), "");
+        Pair<StringBuilder, List<SimpleRankItem>> fullRank = generateRank(deltaRankingData, Integer.MAX_VALUE, each -> each.id() >= 1533 && !Global.config.excludeID().contains(each.id()), "");
         plainResult.append(fullRank.A);
 
         appendGenerationInfo(plainResult);

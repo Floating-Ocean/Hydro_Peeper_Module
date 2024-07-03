@@ -19,10 +19,10 @@ public class RPReloader {
      *
      * @throws Throwable 异常信息
      */
-    public static void reload() throws Throwable {
+    public static void reload(String type) throws Throwable {
         final String rpUrl = Global.config.ojUrl() + "manage/script";
         Document rpDocument = QuickUtils.wrapWithCookie(Jsoup.connect(rpUrl))
-                .requestBody("{\"args\":\"\",\"id\":\"rp\"}")
+                .requestBody("{\"args\":\"\",\"id\":\"" + type + "\"}")
                 .header("Content-Type", "application/json")
                 .post();
         Elements scripts = rpDocument.getElementsByTag("script");
@@ -33,16 +33,16 @@ public class RPReloader {
 
         if (!matcher.find()) return;
         String ridValue = matcher.group(1);
-        System.out.println("RPReload run id: " + ridValue);
+        System.out.println("RPReload run id: " + ridValue + ", type: " + type);
 
         String status = "Started";
         long startTime = System.currentTimeMillis(), lastQueryTime = 0;
         while (!status.equals(VerdictType.ACCEPTED.getName())) {
             long nowTime = System.currentTimeMillis();
-            if (nowTime - startTime > 10 * 60 * 1000) { //保证只等待10秒
-                throw new RunModuleException("Refresh RP failed after 10s' wait.");
+            if (nowTime - startTime > 60 * 60 * 1000) { //保证只等待1分钟
+                throw new RunModuleException("Refresh RP failed after 60s' wait.");
             }
-            if (nowTime - lastQueryTime < 1000) continue; //1秒检查一次
+            if (nowTime - lastQueryTime < 2000) continue; //1秒检查一次
             lastQueryTime = nowTime;
 
             final String runUrl = Global.config.ojUrl() + "record/" + ridValue;

@@ -3,9 +3,9 @@ package flocean.module.peeper.fjnuoj.tool;
 import flocean.module.peeper.fjnuoj.config.Global;
 import flocean.module.peeper.fjnuoj.data.SubmissionData;
 import flocean.module.peeper.fjnuoj.data.UserInfoData;
+import flocean.module.peeper.fjnuoj.data.rank.RankingItem;
 import flocean.module.peeper.fjnuoj.data.rank.SimpleRankItem;
 import flocean.module.peeper.fjnuoj.data.rank.SubmissionRankItem;
-import flocean.module.peeper.fjnuoj.data.rank.TrainingRankItem;
 import flocean.module.peeper.fjnuoj.enums.VerdictType;
 import flocean.module.peeper.fjnuoj.lang.RunModuleException;
 import flocean.module.peeper.fjnuoj.utils.ImgConvert;
@@ -83,11 +83,15 @@ public class ImgGenerator {
         StyledString mostPopularCountHow = packString("共有 " + fullRankHolder.mostPopularCount + " 个人提交本题", "M", 28);
 
         StyledString top10Subtitle = packString("训练榜单", "B", 36);
-        StyledString top10Title = packString("新生训练题单完成比", "H", 72);
+        StyledString top10Title = packString("新生排名", "H", 72);
         StyledString top10Mark = packString("Top 10th", "H", 48);
         List<RankDrawHolder> top10Who = new ArrayList<>();
+        int maxCount = 0;
         for (var each : fullRankHolder.top10()) {
-            TrainingRankItem currentRankItem = new TrainingRankItem(each);
+            maxCount = Math.max(maxCount, each.val());
+        }
+        for (var each : fullRankHolder.top10()) {
+            RankingItem currentRankItem = new RankingItem(each, maxCount);
             top10Who.add(new RankDrawHolder(currentRankItem.getProgress(), !currentRankItem.fetchRank().equals("*"),
                     packString(currentRankItem.fetchRank(), "H", 64),
                     packString(currentRankItem.fetchWho().name(), "B", 36),
@@ -217,11 +221,15 @@ public class ImgGenerator {
         StyledString firstACWhat = packString(nowRankHolder.firstACInfo, "M", 28);
 
         StyledString top52Subtitle = packString("训练榜单", "B", 36);
-        StyledString top52Title = packString("新生训练题单完成比", "H", 72);
+        StyledString top52Title = packString("新生排名", "H", 72);
         StyledString top52Mark = packString("Top 5th", "H", 48);
         List<RankDrawHolder> top52Who = new ArrayList<>();
+        int maxCount = 0;
         for (var each : nowRankHolder.top52()) {
-            TrainingRankItem currentRankItem = new TrainingRankItem(each);
+            maxCount = Math.max(maxCount, each.val());
+        }
+        for (var each : nowRankHolder.top52()) {
+            RankingItem currentRankItem = new RankingItem(each, maxCount);
             top52Who.add(new RankDrawHolder(currentRankItem.getProgress(), !currentRankItem.fetchRank().equals("*"),
                     packString(currentRankItem.fetchRank(), "H", 64),
                     packString(currentRankItem.fetchWho().name(), "B", 36),

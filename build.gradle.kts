@@ -6,7 +6,8 @@ plugins {
 }
 
 group = "flocean.module.peeper.fjnuoj"
-version = "3.3.4"
+version = "3.3.5"
+project.configurations.getByName("implementation").isCanBeResolved = true
 
 repositories {
     mavenCentral()

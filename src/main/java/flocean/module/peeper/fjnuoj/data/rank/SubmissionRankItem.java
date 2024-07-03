@@ -20,7 +20,7 @@ public record SubmissionRankItem(String rank, UserData user, int count, int maxC
 
     @Override
     public String fetchVal() {
-        return count() + "";
+        return count() + "题";
     }
 
     @Override

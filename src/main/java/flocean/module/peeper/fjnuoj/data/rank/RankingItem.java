@@ -2,10 +2,10 @@ package flocean.module.peeper.fjnuoj.data.rank;
 
 import flocean.module.peeper.fjnuoj.data.UserData;
 
-public record TrainingRankItem(String rank, UserData user, int proportion) implements VisualRankItem {
+public record RankingItem(String rank, UserData user, int ac, int max) implements VisualRankItem {
 
-    public TrainingRankItem(SimpleRankItem rankItem) {
-        this(rankItem.rank(), rankItem.who(), rankItem.val());
+    public RankingItem(SimpleRankItem rankItem, int max) {
+        this(rankItem.rank(), rankItem.who(), rankItem.val(), max);
     }
 
     @Override
@@ -20,11 +20,11 @@ public record TrainingRankItem(String rank, UserData user, int proportion) imple
 
     @Override
     public String fetchVal() {
-        return proportion() + "%";
+        return ac() + "题";
     }
 
     @Override
     public double getProgress() {
-        return proportion / 100.0;
+        return (double) ac / max;
     }
 }

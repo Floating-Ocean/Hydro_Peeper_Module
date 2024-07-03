@@ -46,7 +46,7 @@ public class SubmissionTool {
             timeRange[1] += 86400;
         }
         while (true) {
-            final String url = Global.config.ojUrl() + "record?page=" + (i++);
+            final String url = Global.config.ojUrl() + "record?all=1&page=" + (i++);
             Document document = QuickUtils.wrapWithCookie(Jsoup.connect(url)).get();
             Element data = document.getElementsByClass("data-table").get(0)
                     .getElementsByTag("tbody").get(0);
@@ -54,6 +54,7 @@ public class SubmissionTool {
             for (var each : data.getElementsByTag("tr")) {
                 Element status = each.getElementsByClass("col--status__text").get(0);
                 Element problem = each.getElementsByClass("col--problem").get(0);
+                if(problem.html().contains("text-orange")) continue; //去掉hack和自测
                 Element who = each.getElementsByClass("col--submit-by").get(0)
                         .getElementsByTag("a").get(0);
                 Element time = each.getElementsByClass("time relative").get(0);
